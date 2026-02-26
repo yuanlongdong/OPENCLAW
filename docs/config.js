@@ -18,7 +18,7 @@
 
   // Fill mainnet contract/owner after mainnet deployment.
   const MAINNET = {
-    OPENCLAW_ADDRESS: '0x9b1e428ee00E5499eA1016e98e5C37a3DCe51641',
+    OPENCLAW_ADDRESS: '0xf5496b6977A91BA8848B8730C48B1245Dce090dc',
     OPENCLAW_CHAIN_ID: 56,
     OPENCLAW_CHAIN_NAME: 'BNB Smart Chain',
     OPENCLAW_RPC_URL: 'https://bsc-dataseed.binance.org',
