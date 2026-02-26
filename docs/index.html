@@ -83,6 +83,10 @@
         <span id="balanceOut" class="muted"></span>
       </div>
       <div class="row">
+        <b>tBNB 余额:</b>
+        <span id="nativeOut" class="muted">-</span>
+      </div>
+      <div class="row">
         <input id="to" placeholder="收款地址" />
         <input id="amount" placeholder="数量" />
         <button id="send">转账</button>
@@ -168,6 +172,12 @@
 
     function shortAddr(addr) {
       return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+    }
+
+    async function refreshNativeBalance() {
+      if (!provider || !account) return;
+      const wei = await provider.getBalance(account);
+      setText('nativeOut', `${ethers.formatUnits(wei, 18)} tBNB`, 'mono');
     }
 
     function loadHistory() {
@@ -375,6 +385,7 @@
     document.getElementById('connect').onclick = async () => {
       try {
         await connect();
+        await refreshNativeBalance();
         setText('status', '钱包已连接', 'ok');
       } catch (e) {
         setText('status', e.message || '连接失败', 'bad');
@@ -412,6 +423,7 @@
         const c = getContract(true);
         const b = await c.balanceOf(account);
         setText('balanceOut', `${ethers.formatUnits(b, TOKEN_DECIMALS)} OCL`, 'mono');
+        await refreshNativeBalance();
       } catch (e) {
         if ((e && e.code === 'NETWORK_ERROR') || String(e?.message || '').includes('network changed')) {
           try {
@@ -421,6 +433,7 @@
             const c = getContract(true);
             const b = await c.balanceOf(account);
             setText('balanceOut', `${ethers.formatUnits(b, TOKEN_DECIMALS)} OCL`, 'mono');
+            await refreshNativeBalance();
             setText('status', '已自动重连网络并完成查询', 'ok');
             return;
           } catch (_) {}
