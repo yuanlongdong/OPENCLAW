@@ -4,11 +4,24 @@
 - Minimal Web3 dApp served by GitHub Pages
 - Hyperliquid perp module (market data + order pre-check + jump to official trade page)
 
-## Status
-- Contract: pending deployment (needs funded deployer wallet with tBNB)
-- dApp: in `docs/`
+## Networks
+- Testnet: BSC Testnet (chainId 97)
+- Mainnet: BNB Smart Chain (chainId 56)
 
-## Dev
+## Quick Start
+- `cp .env.example .env`
+- Fill `.env` with your deployer key and RPC
 - `npm install`
 - `npm run compile`
-- `npm run deploy:bsc`
+
+## Deploy
+- Testnet: `npm run deploy:bsc:testnet`
+- Mainnet: `npm run deploy:bsc:mainnet`
+
+## Verify (BscScan)
+- Set `CONTRACT_ADDRESS=0x...` in `.env`
+- Testnet: `npm run verify:bsc:testnet`
+- Mainnet: `npm run verify:bsc:mainnet`
+
+## Launch to Real Trading
+- See `MAINNET_LAUNCH.md` for full checklist (deploy, verify, add Pancake liquidity, publish links).
