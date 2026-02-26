@@ -126,6 +126,7 @@
     let provider, signer, account;
     let hlUniverse = [];
     let hlCtxs = [];
+    const hlFallbackSymbols = ['BTC', 'ETH', 'SOL', 'BNB', 'DOGE', 'XRP', 'ARB', 'OP', 'LINK', 'AAVE'];
 
     function setText(id, val, cls = 'muted') {
       const el = document.getElementById(id);
@@ -164,7 +165,7 @@
       const keep = sel.value;
       sel.innerHTML = '';
       const top = ['BTC', 'ETH', 'SOL', 'BNB', 'DOGE', 'XRP'];
-      const names = hlUniverse.map(x => x.name);
+      const names = hlUniverse.length > 0 ? hlUniverse.map(x => x.name) : hlFallbackSymbols;
       const ordered = [...new Set([...top.filter(x => names.includes(x)), ...names])].slice(0, 120);
       for (const n of ordered) {
         const o = document.createElement('option');
@@ -179,7 +180,11 @@
       const symbol = document.getElementById('hlSymbol').value;
       const idx = hlUniverse.findIndex(x => x.name === symbol);
       if (idx < 0 || !hlCtxs[idx]) {
-        setText('hlStatus', '未找到该币种行情', 'bad');
+        setText('hlStatus', '行情接口不可用，已切换手动交易模式', 'muted');
+        setText('hlMid', '-', 'mono');
+        setText('hlMark', '-', 'mono');
+        setText('hlFunding', '-', 'mono');
+        setText('hlDay', '-', 'muted');
         return;
       }
       const c = hlCtxs[idx];
@@ -203,8 +208,7 @@
       const lev = Number(document.getElementById('hlLeverage').value || 0);
       const size = Number(document.getElementById('hlSize').value || 0);
       const idx = hlUniverse.findIndex(x => x.name === symbol);
-      if (idx < 0) return '币种无效';
-      const maxLev = Number(hlUniverse[idx].maxLeverage || 1);
+      const maxLev = idx >= 0 ? Number(hlUniverse[idx].maxLeverage || 1) : 20;
       if (!Number.isFinite(lev) || lev < 1) return '杠杆必须 >= 1';
       if (lev > maxLev) return `杠杆超限，${symbol} 最大 ${maxLev}x`;
       if (!Number.isFinite(size) || size <= 0) return '名义仓位必须 > 0';
@@ -254,7 +258,9 @@
         fillHlSymbol();
         showHlQuote();
       } catch (e) {
-        setText('hlStatus', e.message || '刷新失败', 'bad');
+        fillHlSymbol();
+        showHlQuote();
+        setText('hlStatus', '无法连接 Hyperliquid 行情接口，可直接点“去 Hyperliquid 下单”', 'bad');
       }
     };
 
@@ -284,7 +290,9 @@
         fillHlSymbol();
         showHlQuote();
       } catch (e) {
-        setText('hlStatus', e.message || '初始化失败', 'bad');
+        fillHlSymbol();
+        showHlQuote();
+        setText('hlStatus', '无法连接 Hyperliquid 行情接口，已启用手动交易模式', 'bad');
       }
     })();
   </script>
