@@ -17,6 +17,7 @@
 ## Deploy
 - Testnet: `npm run deploy:bsc:testnet`
 - Mainnet: `npm run deploy:bsc:mainnet`
+- Mainnet + auto sync frontend config: `npm run deploy:bsc:mainnet:sync`
 
 ## Verify (BscScan)
 - Set `CONTRACT_ADDRESS=0x...` in `.env`
