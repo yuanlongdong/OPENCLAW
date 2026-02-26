@@ -6,6 +6,7 @@
     "compile": "hardhat compile",
     "deploy:bsc:testnet": "hardhat run scripts/deploy.js --network bscTestnet",
     "deploy:bsc:mainnet": "hardhat run scripts/deploy.js --network bscMainnet",
+    "deploy:bsc:mainnet:sync": "hardhat run scripts/deploy-mainnet-and-sync.js --network bscMainnet",
     "verify:bsc:testnet": "hardhat verify --network bscTestnet $CONTRACT_ADDRESS",
     "verify:bsc:mainnet": "hardhat verify --network bscMainnet $CONTRACT_ADDRESS"
   },
