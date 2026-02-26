@@ -138,12 +138,14 @@
 
     async function connect() {
       if (!window.ethereum) throw new Error('未找到 MetaMask，请在钱包内置浏览器打开');
-      provider = new ethers.BrowserProvider(window.ethereum);
+      provider = new ethers.BrowserProvider(window.ethereum, 'any');
       const accs = await provider.send('eth_requestAccounts', []);
       account = accs[0];
+      await ensureBscTestnet();
+      // Recreate provider/signer after network switch to avoid ethers NETWORK_ERROR.
+      provider = new ethers.BrowserProvider(window.ethereum, 'any');
       signer = await provider.getSigner();
       document.getElementById('account').textContent = account;
-      await ensureBscTestnet();
     }
 
     function getContract(readonly = false) {
@@ -302,6 +304,18 @@
         const b = await c.balanceOf(account);
         setText('balanceOut', `${ethers.formatUnits(b, TOKEN_DECIMALS)} OCL`, 'mono');
       } catch (e) {
+        if ((e && e.code === 'NETWORK_ERROR') || String(e?.message || '').includes('network changed')) {
+          try {
+            provider = new ethers.BrowserProvider(window.ethereum, 'any');
+            if (!account) await connect();
+            await ensureTokenContractReady();
+            const c = getContract(true);
+            const b = await c.balanceOf(account);
+            setText('balanceOut', `${ethers.formatUnits(b, TOKEN_DECIMALS)} OCL`, 'mono');
+            setText('status', '已自动重连网络并完成查询', 'ok');
+            return;
+          } catch (_) {}
+        }
         setText('status', e.message || '查询失败', 'bad');
       }
     };
