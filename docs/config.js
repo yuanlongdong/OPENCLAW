@@ -1,12 +1,33 @@
-window.OPENCLAW_ADDRESS = '0x9b1e428ee00E5499eA1016e98e5C37a3DCe51641';
-window.OPENCLAW_CHAIN_ID = 97;
-window.OPENCLAW_CHAIN_NAME = 'BSC Testnet';
-window.OPENCLAW_RPC_URL = 'https://bsc-testnet-rpc.publicnode.com';
-window.OPENCLAW_EXPLORER = 'https://testnet.bscscan.com';
-window.OPENCLAW_NATIVE_SYMBOL = 'tBNB';
+(function () {
+  // Use URL param to switch network without editing file:
+  // - Testnet (default): /OPENCLAW/
+  // - Mainnet: /OPENCLAW/?net=mainnet
+  const q = new URLSearchParams(window.location.search);
+  const net = String(q.get('net') || 'testnet').toLowerCase();
 
-// Optional: developer wallet (for issuer holding panel)
-window.OPENCLAW_OWNER = '0x9669C9d54A9BB73C0Ed1068aBD010aB79075dAAe';
+  const TESTNET = {
+    OPENCLAW_ADDRESS: '0x9b1e428ee00E5499eA1016e98e5C37a3DCe51641',
+    OPENCLAW_CHAIN_ID: 97,
+    OPENCLAW_CHAIN_NAME: 'BSC Testnet',
+    OPENCLAW_RPC_URL: 'https://bsc-testnet-rpc.publicnode.com',
+    OPENCLAW_EXPLORER: 'https://testnet.bscscan.com',
+    OPENCLAW_NATIVE_SYMBOL: 'tBNB',
+    OPENCLAW_OWNER: '0x9669C9d54A9BB73C0Ed1068aBD010aB79075dAAe',
+    BSCSCAN_API_KEY: ''
+  };
 
-// Optional: enable holder count fetch from BscScan API
-window.BSCSCAN_API_KEY = '';
+  // Fill mainnet contract/owner after mainnet deployment.
+  const MAINNET = {
+    OPENCLAW_ADDRESS: '0x0000000000000000000000000000000000000000',
+    OPENCLAW_CHAIN_ID: 56,
+    OPENCLAW_CHAIN_NAME: 'BNB Smart Chain',
+    OPENCLAW_RPC_URL: 'https://bsc-dataseed.binance.org',
+    OPENCLAW_EXPLORER: 'https://bscscan.com',
+    OPENCLAW_NATIVE_SYMBOL: 'BNB',
+    OPENCLAW_OWNER: '0x0000000000000000000000000000000000000000',
+    BSCSCAN_API_KEY: ''
+  };
+
+  const cfg = net === 'mainnet' ? MAINNET : TESTNET;
+  Object.assign(window, cfg);
+})();
