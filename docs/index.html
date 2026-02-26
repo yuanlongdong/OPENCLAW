@@ -64,6 +64,7 @@
       <p class="muted">合约: <span class="mono" id="contract"></span></p>
       <div class="row">
         <button id="connect">连接钱包</button>
+        <button id="addToken" class="secondary">添加 OCL 到钱包</button>
         <span id="account" class="muted"></span>
       </div>
       <div class="row">
@@ -221,6 +222,30 @@
         setText('status', '钱包已连接', 'ok');
       } catch (e) {
         setText('status', e.message || '连接失败', 'bad');
+      }
+    };
+
+    document.getElementById('addToken').onclick = async () => {
+      try {
+        if (!window.ethereum) throw new Error('未找到钱包环境');
+        const ok = await window.ethereum.request({
+          method: 'wallet_watchAsset',
+          params: {
+            type: 'ERC20',
+            options: {
+              address: window.OPENCLAW_ADDRESS,
+              symbol: 'OCL',
+              decimals: 18
+            }
+          }
+        });
+        if (ok) {
+          setText('status', '已请求添加 OCL，请在钱包确认', 'ok');
+        } else {
+          setText('status', '钱包未添加 OCL（用户取消或钱包不支持）', 'bad');
+        }
+      } catch (e) {
+        setText('status', e.message || '添加代币失败', 'bad');
       }
     };
 
