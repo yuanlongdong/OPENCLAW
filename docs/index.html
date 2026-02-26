@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OpenClaw</title>
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg:#0d1117;
@@ -18,11 +21,31 @@
     * { box-sizing:border-box; }
     body {
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background: radial-gradient(circle at 20% 0%, #1f2a44 0%, var(--bg) 40%);
+      font-family: Satoshi, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: #070d18;
       color:var(--txt);
+      overflow-x:hidden;
     }
-    .wrap { max-width:900px; margin:40px auto; padding:20px; display:grid; gap:14px; }
+    .wrap { max-width:940px; margin:20px auto 40px; padding:16px; display:grid; gap:14px; position:relative; z-index:2; }
+    .stars, .nebula { position:fixed; inset:0; pointer-events:none; z-index:0; }
+    .stars {
+      background-image:
+        radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,.8), transparent 70%),
+        radial-gradient(1.5px 1.5px at 30% 70%, rgba(255,255,255,.55), transparent 70%),
+        radial-gradient(1.8px 1.8px at 80% 30%, rgba(255,255,255,.6), transparent 70%),
+        radial-gradient(1.2px 1.2px at 60% 55%, rgba(255,255,255,.55), transparent 70%),
+        radial-gradient(1.4px 1.4px at 90% 80%, rgba(255,255,255,.5), transparent 70%);
+      opacity:.45;
+      animation: twinkle 9s ease-in-out infinite alternate;
+    }
+    .nebula {
+      background:
+        radial-gradient(35% 45% at 15% 10%, rgba(66,126,255,.24), transparent 70%),
+        radial-gradient(25% 35% at 82% 22%, rgba(255,98,72,.18), transparent 75%),
+        radial-gradient(30% 40% at 55% 75%, rgba(58,196,255,.13), transparent 75%);
+      filter: blur(8px);
+      animation: drift 24s ease-in-out infinite alternate;
+    }
     .card { background:var(--card); border:1px solid #30363d; border-radius:14px; padding:20px; }
     .row { display:flex; gap:10px; flex-wrap:wrap; margin:10px 0; align-items:center; }
     .col { display:grid; gap:10px; }
@@ -65,20 +88,73 @@
       resize:vertical;
     }
     .history-list { margin:0; padding-left:18px; display:grid; gap:6px; }
-    .hero { overflow:hidden; }
-    .hero img { width:100%; border-radius:12px; border:1px solid #30363d; }
-    .hero h1 { margin:12px 0 6px; font-size:28px; }
-    .hero .actions { margin-top:10px; }
+    .hero-main {
+      text-align:center;
+      padding:28px 18px 26px;
+      border-radius:18px;
+      border:1px solid rgba(79,100,141,.35);
+      background: linear-gradient(180deg, rgba(20,30,50,.72), rgba(11,18,33,.75));
+      box-shadow: 0 20px 55px rgba(0,0,0,.35);
+    }
+    .lobster-mark {
+      width:84px;
+      height:84px;
+      margin:0 auto 14px;
+      animation: floaty 3.2s ease-in-out infinite;
+    }
+    .hero-title {
+      font-family: "Clash Display", Satoshi, sans-serif;
+      font-size: clamp(46px, 8vw, 72px);
+      line-height:1;
+      margin:0 0 8px;
+      letter-spacing:.3px;
+    }
+    .hero-tagline {
+      margin:0;
+      font-size: clamp(20px, 3.2vw, 30px);
+      color:#dbe7ff;
+      font-family: "Clash Display", Satoshi, sans-serif;
+      font-weight:600;
+    }
+    .hero-desc {
+      max-width:740px;
+      margin:14px auto 0;
+      color:#a8b7d3;
+      font-size:16px;
+      line-height:1.65;
+    }
+    .hero-actions { justify-content:center; margin-top:16px; }
+    @keyframes twinkle { from { opacity:.28; } to { opacity:.58; } }
+    @keyframes drift { from { transform: translateY(-10px) scale(1.03); } to { transform: translateY(12px) scale(1); } }
+    @keyframes floaty { 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-8px);} }
   </style>
 </head>
 <body>
+  <div class="stars"></div>
+  <div class="nebula"></div>
   <div class="wrap">
-    <div class="card hero">
-      <img src="./assets/openclaw-ai-logo.svg" alt="OpenClaw AI cover" />
-      <h1>OpenClaw AI</h1>
-      <p class="muted">AI 驱动的 Web3 实用代币与交易工具生态</p>
-      <div class="row actions">
+    <div class="hero-main">
+      <svg class="lobster-mark" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="lobster-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ff7a5a"></stop>
+            <stop offset="100%" stop-color="#ff4b4b"></stop>
+          </linearGradient>
+        </defs>
+        <path d="M60 10 C30 10 15 35 15 55 C15 75 30 95 45 100 L45 110 L55 110 L55 100 C55 100 60 102 65 100 L65 110 L75 110 L75 100 C90 95 105 75 105 55 C105 35 90 10 60 10Z" fill="url(#lobster-gradient)"></path>
+        <path d="M20 45 C5 40 0 50 5 60 C10 70 20 65 25 55 C28 48 25 45 20 45Z" fill="url(#lobster-gradient)"></path>
+        <path d="M100 45 C115 40 120 50 115 60 C110 70 100 65 95 55 C92 48 95 45 100 45Z" fill="url(#lobster-gradient)"></path>
+        <circle cx="45" cy="35" r="6" fill="#090e18"></circle>
+        <circle cx="75" cy="35" r="6" fill="#090e18"></circle>
+        <circle cx="46" cy="34" r="2" fill="#66ebff"></circle>
+        <circle cx="76" cy="34" r="2" fill="#66ebff"></circle>
+      </svg>
+      <h1 class="hero-title">OpenClaw AI</h1>
+      <p class="hero-tagline">The AI that actually does things.</p>
+      <p class="hero-desc">OpenClaw AI 是能真实执行任务的 AI 机器人。OCL 是其生态代币，用于机器人能力调用、功能解锁与生态激励。</p>
+      <div class="row hero-actions">
         <a href="./whitepaper.html" target="_blank" rel="noopener noreferrer"><button class="secondary">查看白皮书</button></a>
+        <a href="./index.html?net=mainnet"><button>进入主网</button></a>
       </div>
     </div>
     <div class="card">
