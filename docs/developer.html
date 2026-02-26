@@ -81,33 +81,6 @@
       <ul id="historyList" class="history-list muted"></ul>
     </section>
 
-    <section class="card">
-      <h2>Hyperliquid 永续 (去中心化)</h2>
-      <p class="muted">当前版本: 行情 + 交易入口（下单在 Hyperliquid 官方页面完成）</p>
-      <div class="row">
-        <select id="hlSymbol"></select>
-        <button id="hlRefresh" class="secondary">刷新行情</button>
-      </div>
-      <div class="grid-2">
-        <div class="kv"><b>中间价 Mid</b><span id="hlMid">-</span></div>
-        <div class="kv"><b>标记价 Mark</b><span id="hlMark">-</span></div>
-        <div class="kv"><b>资金费率 Funding</b><span id="hlFunding">-</span></div>
-        <div class="kv"><b>24h 变动</b><span id="hlDay">-</span></div>
-      </div>
-      <div class="row">
-        <select id="hlSide">
-          <option value="LONG">LONG</option>
-          <option value="SHORT">SHORT</option>
-        </select>
-        <input id="hlLeverage" type="number" min="1" step="1" value="5" placeholder="杠杆" />
-        <input id="hlSize" type="number" min="0" step="0.001" placeholder="名义仓位(USD)" />
-      </div>
-      <div class="row">
-        <button id="hlCheck" class="warn">下单前检查</button>
-        <button id="hlTrade">去 Hyperliquid 下单</button>
-      </div>
-      <p id="hlStatus" class="muted status"></p>
-    </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
