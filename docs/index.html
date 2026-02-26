@@ -160,6 +160,24 @@
           params: [{ chainId: '0x61' }]
         });
       } catch (e) {
+        const code = e && (e.code === 4902 || e.code === -32603);
+        if (code) {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0x61',
+                chainName: 'BSC Testnet',
+                nativeCurrency: { name: 'Test BNB', symbol: 'tBNB', decimals: 18 },
+                rpcUrls: ['https://bsc-testnet-rpc.publicnode.com'],
+                blockExplorerUrls: ['https://testnet.bscscan.com']
+              }]
+            });
+            return;
+          } catch (_) {
+            throw new Error('请在钱包确认添加 BSC Testnet 网络');
+          }
+        }
         throw new Error('请切换到 BSC Testnet (chainId 97) 后重试');
       }
     }
