@@ -54,6 +54,17 @@
     .status { min-height:20px; }
     .ok { color:var(--ok); }
     .bad { color:var(--bad); }
+    textarea {
+      width:100%;
+      min-height:120px;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid #30363d;
+      background:#0b0f14;
+      color:var(--txt);
+      resize:vertical;
+    }
+    .history-list { margin:0; padding-left:18px; display:grid; gap:6px; }
   </style>
 </head>
 <body>
@@ -76,7 +87,24 @@
         <input id="amount" placeholder="数量" />
         <button id="send">转账</button>
       </div>
+      <div class="col">
+        <p class="muted">批量空投: 每行一个 `地址,数量`，示例 `0xabc...,100`</p>
+        <textarea id="bulkInput" placeholder="0x123...,10&#10;0x456...,25"></textarea>
+        <div class="row">
+          <button id="bulkPreview" class="secondary">预览空投</button>
+          <button id="bulkSend" class="warn">执行空投</button>
+        </div>
+      </div>
       <p id="status" class="muted status"></p>
+    </div>
+
+    <div class="card">
+      <h2>最近转账历史</h2>
+      <div class="row">
+        <button id="refreshHistory" class="secondary">刷新历史</button>
+        <button id="clearHistory" class="secondary">清空历史</button>
+      </div>
+      <ul id="historyList" class="history-list muted"></ul>
     </div>
 
     <div class="card">
@@ -121,6 +149,7 @@
     ];
     const TOKEN_DECIMALS = 18;
     const REQUIRED_CHAIN_ID = 97n;
+    const HISTORY_KEY = 'openclaw_transfer_history_v1';
 
     const contractEl = document.getElementById('contract');
     contractEl.textContent = window.OPENCLAW_ADDRESS;
@@ -128,12 +157,73 @@
     let provider, signer, account;
     let hlUniverse = [];
     let hlCtxs = [];
+    let transferHistory = [];
     const hlFallbackSymbols = ['BTC', 'ETH', 'SOL', 'BNB', 'DOGE', 'XRP', 'ARB', 'OP', 'LINK', 'AAVE'];
 
     function setText(id, val, cls = 'muted') {
       const el = document.getElementById(id);
       el.textContent = val;
       el.className = cls;
+    }
+
+    function shortAddr(addr) {
+      return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+    }
+
+    function loadHistory() {
+      try {
+        const raw = localStorage.getItem(HISTORY_KEY);
+        transferHistory = raw ? JSON.parse(raw) : [];
+      } catch (_) {
+        transferHistory = [];
+      }
+    }
+
+    function saveHistory() {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(transferHistory.slice(0, 100)));
+    }
+
+    function addHistoryItem(item) {
+      transferHistory.unshift(item);
+      transferHistory = transferHistory.slice(0, 100);
+      saveHistory();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const ul = document.getElementById('historyList');
+      ul.innerHTML = '';
+      if (!transferHistory.length) {
+        const li = document.createElement('li');
+        li.textContent = '暂无转账记录';
+        ul.appendChild(li);
+        return;
+      }
+      for (const r of transferHistory) {
+        const li = document.createElement('li');
+        const ts = new Date(r.time).toLocaleString();
+        li.innerHTML = `<span class=\"mono\">${shortAddr(r.from)} -> ${shortAddr(r.to)}</span> | ${r.amount} OCL | <a class=\"mono\" href=\"https://testnet.bscscan.com/tx/${r.hash}\" target=\"_blank\" rel=\"noopener noreferrer\">${r.hash.slice(0, 10)}...</a> | ${ts}`;
+        ul.appendChild(li);
+      }
+    }
+
+    function parseBulkRows(text) {
+      const rows = text.split('\\n').map(x => x.trim()).filter(Boolean);
+      const parsed = [];
+      for (let i = 0; i < rows.length; i++) {
+        const raw = rows[i].replace(/\\s+/g, '');
+        const parts = raw.split(',');
+        if (parts.length !== 2) throw new Error(`第 ${i + 1} 行格式错误，应为 地址,数量`);
+        const to = parts[0];
+        const amount = parts[1];
+        if (!ethers.isAddress(to)) throw new Error(`第 ${i + 1} 行地址无效`);
+        const n = Number(amount);
+        if (!Number.isFinite(n) || n <= 0) throw new Error(`第 ${i + 1} 行数量无效`);
+        parsed.push({ to, amount: amount });
+      }
+      if (parsed.length === 0) throw new Error('空投列表为空');
+      if (parsed.length > 100) throw new Error('单次最多 100 行，避免超时');
+      return parsed;
     }
 
     async function connect() {
@@ -326,14 +416,60 @@
         await ensureTokenContractReady();
         const to = document.getElementById('to').value.trim();
         const amount = document.getElementById('amount').value.trim();
+        if (!ethers.isAddress(to)) throw new Error('收款地址无效');
+        if (!(Number(amount) > 0)) throw new Error('数量必须 > 0');
         const c = getContract(false);
         const tx = await c.transfer(to, ethers.parseUnits(amount, TOKEN_DECIMALS));
         setText('status', `交易已提交: ${tx.hash}`, 'muted');
         await tx.wait();
         setText('status', `转账成功: ${tx.hash}`, 'ok');
+        addHistoryItem({ from: account, to, amount, hash: tx.hash, time: Date.now() });
       } catch (e) {
         setText('status', e.message || '转账失败', 'bad');
       }
+    };
+
+    document.getElementById('bulkPreview').onclick = () => {
+      try {
+        const parsed = parseBulkRows(document.getElementById('bulkInput').value);
+        const total = parsed.reduce((s, x) => s + Number(x.amount), 0);
+        setText('status', `空投预览: ${parsed.length} 笔, 合计 ${total} OCL`, 'ok');
+      } catch (e) {
+        setText('status', e.message || '预览失败', 'bad');
+      }
+    };
+
+    document.getElementById('bulkSend').onclick = async () => {
+      try {
+        if (!account) await connect();
+        await ensureTokenContractReady();
+        const parsed = parseBulkRows(document.getElementById('bulkInput').value);
+        setText('status', `开始空投，共 ${parsed.length} 笔...`, 'muted');
+        const c = getContract(false);
+        for (let i = 0; i < parsed.length; i++) {
+          const row = parsed[i];
+          setText('status', `发送中 ${i + 1}/${parsed.length}: ${shortAddr(row.to)} ${row.amount} OCL`, 'muted');
+          const tx = await c.transfer(row.to, ethers.parseUnits(row.amount, TOKEN_DECIMALS));
+          await tx.wait();
+          addHistoryItem({ from: account, to: row.to, amount: row.amount, hash: tx.hash, time: Date.now() });
+        }
+        setText('status', `空投完成，共 ${parsed.length} 笔`, 'ok');
+      } catch (e) {
+        setText('status', e.message || '空投失败', 'bad');
+      }
+    };
+
+    document.getElementById('refreshHistory').onclick = () => {
+      loadHistory();
+      renderHistory();
+      setText('status', '已刷新本地历史', 'ok');
+    };
+
+    document.getElementById('clearHistory').onclick = () => {
+      transferHistory = [];
+      saveHistory();
+      renderHistory();
+      setText('status', '已清空本地历史', 'ok');
     };
 
     document.getElementById('hlRefresh').onclick = async () => {
@@ -369,6 +505,8 @@
     };
 
     (async () => {
+      loadHistory();
+      renderHistory();
       try {
         await fetchHlMeta();
         fillHlSymbol();
