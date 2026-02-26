@@ -178,10 +178,6 @@
         <b><span id="nativeLabel">原生币余额:</span></b>
         <span id="nativeOut" class="muted">-</span>
       </div>
-      <div class="row">
-        <button id="devUnlock" class="secondary">开发者解锁</button>
-        <span id="devState" class="muted">未解锁（普通用户不可见开发者操作区）</span>
-      </div>
       <div class="row" data-dev>
         <input id="to" placeholder="收款地址" />
         <input id="amount" placeholder="数量" />
@@ -298,10 +294,9 @@
       return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
     }
 
-    function setDeveloperMode(enabled, message = '') {
+    function setDeveloperMode(enabled) {
       isDeveloper = !!enabled;
       document.body.classList.toggle('dev-mode', isDeveloper);
-      setText('devState', message || (isDeveloper ? '已解锁：开发者操作区可见' : '未解锁（普通用户不可见开发者操作区）'), isDeveloper ? 'ok' : 'muted');
     }
 
     function requireDeveloper() {
@@ -310,12 +305,12 @@
 
     async function refreshDeveloperAccess() {
       if (!ethers.isAddress(OWNER_ADDRESS) || !account) {
-        setDeveloperMode(false, '未配置开发者地址或未连接钱包');
+        setDeveloperMode(false);
         return;
       }
       const owner = ethers.getAddress(OWNER_ADDRESS);
       const current = ethers.getAddress(account);
-      setDeveloperMode(current === owner, current === owner ? `开发者已验证: ${shortAddr(current)}` : `当前钱包 ${shortAddr(current)} 非开发者地址`);
+      setDeveloperMode(current === owner);
     }
 
     async function refreshNativeBalance() {
@@ -584,15 +579,6 @@
         setText('status', '钱包已连接', 'ok');
       } catch (e) {
         setText('status', e.message || '连接失败', 'bad');
-      }
-    };
-
-    document.getElementById('devUnlock').onclick = async () => {
-      try {
-        if (!account) await connect();
-        await refreshDeveloperAccess();
-      } catch (e) {
-        setText('devState', e.message || '开发者解锁失败', 'bad');
       }
     };
 
