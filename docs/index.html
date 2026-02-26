@@ -208,18 +208,37 @@
     }
 
     function parseBulkRows(text) {
-      const rows = text.split('\\n').map(x => x.trim()).filter(Boolean);
+      // Accept mobile paste variants: Chinese comma/semicolon, one-line multi-items,
+      // and hidden whitespace characters copied from chat apps.
+      const normalized = String(text || '')
+        .replace(/[，]/g, ',')
+        .replace(/[；;]/g, '\n')
+        .replace(/\r/g, '\n')
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        .replace(/\s+(?=0x[a-fA-F0-9]{40}\s*,)/g, '\n');
+      const rows = normalized.split('\n').map(x => x.trim()).filter(Boolean);
       const parsed = [];
       for (let i = 0; i < rows.length; i++) {
-        const raw = rows[i].replace(/\\s+/g, '');
-        const parts = raw.split(',');
-        if (parts.length !== 2) throw new Error(`第 ${i + 1} 行格式错误，应为 地址,数量`);
-        const to = parts[0];
-        const amount = parts[1];
+        const line = rows[i];
+        const byComma = line.split(',').map(x => x.trim()).filter(Boolean);
+        let to = '';
+        let amount = '';
+        if (byComma.length === 2) {
+          to = byComma[0];
+          amount = byComma[1];
+        } else {
+          const bySpace = line.split(/\s+/).map(x => x.trim()).filter(Boolean);
+          if (bySpace.length === 2) {
+            to = bySpace[0];
+            amount = bySpace[1];
+          } else {
+            throw new Error(`第 ${i + 1} 行格式错误，应为 地址,数量`);
+          }
+        }
         if (!ethers.isAddress(to)) throw new Error(`第 ${i + 1} 行地址无效`);
         const n = Number(amount);
         if (!Number.isFinite(n) || n <= 0) throw new Error(`第 ${i + 1} 行数量无效`);
-        parsed.push({ to, amount: amount });
+        parsed.push({ to: to.toLowerCase(), amount: String(n) });
       }
       if (parsed.length === 0) throw new Error('空投列表为空');
       if (parsed.length > 100) throw new Error('单次最多 100 行，避免超时');
