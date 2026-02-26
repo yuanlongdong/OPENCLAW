@@ -65,10 +65,22 @@
       resize:vertical;
     }
     .history-list { margin:0; padding-left:18px; display:grid; gap:6px; }
+    .hero { overflow:hidden; }
+    .hero img { width:100%; border-radius:12px; border:1px solid #30363d; }
+    .hero h1 { margin:12px 0 6px; font-size:28px; }
+    .hero .actions { margin-top:10px; }
   </style>
 </head>
 <body>
   <div class="wrap">
+    <div class="card hero">
+      <img src="./assets/openclaw-ai-logo.svg" alt="OpenClaw AI cover" />
+      <h1>OpenClaw AI</h1>
+      <p class="muted">AI 驱动的 Web3 实用代币与交易工具生态</p>
+      <div class="row actions">
+        <a href="./whitepaper.html" target="_blank" rel="noopener noreferrer"><button class="secondary">查看白皮书</button></a>
+      </div>
+    </div>
     <div class="card">
       <h2>OpenClaw (OCL)</h2>
       <p class="muted">网络: <span id="networkLabel"></span> (chainId <span id="chainIdLabel"></span>)</p>
