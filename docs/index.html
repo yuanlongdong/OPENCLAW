@@ -104,6 +104,7 @@
 
     <div class="card">
       <h2>最近转账历史</h2>
+      <p class="muted">已分配总额: <span id="historyTotal" class="mono">0 OCL</span></p>
       <div class="row">
         <button id="refreshHistory" class="secondary">刷新历史</button>
         <button id="clearHistory" class="secondary">清空历史</button>
@@ -202,11 +203,13 @@
 
     function renderHistory() {
       const ul = document.getElementById('historyList');
+      let total = 0;
       ul.innerHTML = '';
       if (!transferHistory.length) {
         const li = document.createElement('li');
         li.textContent = '暂无转账记录';
         ul.appendChild(li);
+        setText('historyTotal', '0 OCL', 'mono');
         return;
       }
       for (const r of transferHistory) {
@@ -214,7 +217,10 @@
         const ts = new Date(r.time).toLocaleString();
         li.innerHTML = `<span class=\"mono\">${shortAddr(r.from)} -> ${shortAddr(r.to)}</span> | ${r.amount} OCL | <a class=\"mono\" href=\"https://testnet.bscscan.com/tx/${r.hash}\" target=\"_blank\" rel=\"noopener noreferrer\">${r.hash.slice(0, 10)}...</a> | ${ts}`;
         ul.appendChild(li);
+        const n = Number(r.amount || 0);
+        if (Number.isFinite(n) && n > 0) total += n;
       }
+      setText('historyTotal', `${total} OCL`, 'mono');
     }
 
     function parseBulkRows(text) {
