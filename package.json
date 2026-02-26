@@ -4,10 +4,14 @@
   "private": true,
   "scripts": {
     "compile": "hardhat compile",
-    "deploy:bsc": "hardhat run scripts/deploy.js --network bscTestnet"
+    "deploy:bsc:testnet": "hardhat run scripts/deploy.js --network bscTestnet",
+    "deploy:bsc:mainnet": "hardhat run scripts/deploy.js --network bscMainnet",
+    "verify:bsc:testnet": "hardhat verify --network bscTestnet $CONTRACT_ADDRESS",
+    "verify:bsc:mainnet": "hardhat verify --network bscMainnet $CONTRACT_ADDRESS"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
+    "@nomicfoundation/hardhat-verify": "^2.0.12",
     "hardhat": "^2.22.18"
   },
   "dependencies": {
