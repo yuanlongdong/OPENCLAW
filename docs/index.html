@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenClaw</title>
+  <style>
+    :root { --bg:#0d1117; --card:#161b22; --txt:#e6edf3; --muted:#8b949e; --accent:#2f81f7; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:radial-gradient(circle at 20% 0%, #1f2a44 0%, var(--bg) 40%); color:var(--txt); }
+    .wrap { max-width:760px; margin:40px auto; padding:20px; }
+    .card { background:var(--card); border:1px solid #30363d; border-radius:14px; padding:20px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; margin:12px 0; }
+    button { background:var(--accent); color:white; border:none; border-radius:10px; padding:10px 14px; cursor:pointer; }
+    input { flex:1; min-width:180px; padding:10px; border-radius:10px; border:1px solid #30363d; background:#0b0f14; color:var(--txt); }
+    .muted { color:var(--muted); font-size:14px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; word-break:break-all; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>OpenClaw (OCL)</h1>
+      <p class="muted">Network: Sepolia</p>
+      <p class="muted">Contract: <span class="mono" id="contract"></span></p>
+      <div class="row">
+        <button id="connect">Connect Wallet</button>
+        <span id="account" class="muted"></span>
+      </div>
+      <div class="row">
+        <button id="balance">Check OCL Balance</button>
+        <span id="balanceOut" class="muted"></span>
+      </div>
+      <div class="row">
+        <input id="to" placeholder="to address" />
+        <input id="amount" placeholder="amount" />
+        <button id="send">Transfer</button>
+      </div>
+      <p id="status" class="muted"></p>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+  <script src="./config.js"></script>
+  <script>
+    const abi = [
+      'function balanceOf(address) view returns (uint256)',
+      'function transfer(address,uint256) returns (bool)',
+      'function decimals() view returns (uint8)'
+    ];
+    const contractEl = document.getElementById('contract');
+    contractEl.textContent = window.OPENCLAW_ADDRESS;
+
+    let provider, signer, account;
+
+    async function connect() {
+      if (!window.ethereum) throw new Error('MetaMask not found');
+      provider = new ethers.BrowserProvider(window.ethereum);
+      const accs = await provider.send('eth_requestAccounts', []);
+      account = accs[0];
+      signer = await provider.getSigner();
+      document.getElementById('account').textContent = account;
+    }
+
+    function getContract(readonly = false) {
+      if (!provider) provider = new ethers.BrowserProvider(window.ethereum);
+      return new ethers.Contract(window.OPENCLAW_ADDRESS, abi, readonly ? provider : signer);
+    }
+
+    document.getElementById('connect').onclick = async () => {
+      try { await connect(); document.getElementById('status').textContent = 'Connected'; }
+      catch (e) { document.getElementById('status').textContent = e.message; }
+    };
+
+    document.getElementById('balance').onclick = async () => {
+      try {
+        if (!account) await connect();
+        const c = getContract(true);
+        const d = await c.decimals();
+        const b = await c.balanceOf(account);
+        document.getElementById('balanceOut').textContent = ethers.formatUnits(b, d) + ' OCL';
+      } catch (e) { document.getElementById('status').textContent = e.message; }
+    };
+
+    document.getElementById('send').onclick = async () => {
+      try {
+        if (!account) await connect();
+        const to = document.getElementById('to').value.trim();
+        const amount = document.getElementById('amount').value.trim();
+        const c = getContract(false);
+        const d = await c.decimals();
+        const tx = await c.transfer(to, ethers.parseUnits(amount, d));
+        document.getElementById('status').textContent = 'Pending: ' + tx.hash;
+        await tx.wait();
+        document.getElementById('status').textContent = 'Success: ' + tx.hash;
+      } catch (e) { document.getElementById('status').textContent = e.message; }
+    };
+  </script>
+</body>
+</html>
