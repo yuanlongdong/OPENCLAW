@@ -23,9 +23,6 @@ contractLinkEl.href = `${EXPLORER_BASE}/token/${window.OPENCLAW_ADDRESS}`;
 let provider, signer, account;
 let staticProvider;
 let transferHistory = [];
-let hlUniverse = [];
-let hlCtxs = [];
-const hlFallbackSymbols = ['BTC', 'ETH', 'SOL', 'BNB', 'DOGE', 'XRP', 'ARB', 'OP', 'LINK', 'AAVE'];
 
 function setText(id, val, cls = 'muted') {
   const el = document.getElementById(id);
@@ -233,72 +230,6 @@ async function ensureTokenContractReady() {
   if (!code || code === '0x') throw new Error(`该网络上未找到 OCL 合约，请确认钱包网络为 ${NETWORK_NAME}`);
 }
 
-async function fetchHlMeta() {
-  const res = await fetch('https://api.hyperliquid.xyz/info', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ type: 'metaAndAssetCtxs' })
-  });
-  if (!res.ok) throw new Error('Hyperliquid 行情接口失败');
-  const data = await res.json();
-  hlUniverse = data[0].universe || [];
-  hlCtxs = data[1] || [];
-}
-
-function fillHlSymbol() {
-  const sel = document.getElementById('hlSymbol');
-  const keep = sel.value;
-  sel.innerHTML = '';
-  const top = ['BTC', 'ETH', 'SOL', 'BNB', 'DOGE', 'XRP'];
-  const names = hlUniverse.length > 0 ? hlUniverse.map(x => x.name) : hlFallbackSymbols;
-  const ordered = [...new Set([...top.filter(x => names.includes(x)), ...names])].slice(0, 120);
-  for (const n of ordered) {
-    const o = document.createElement('option');
-    o.value = n;
-    o.textContent = n;
-    sel.appendChild(o);
-  }
-  if (keep && ordered.includes(keep)) sel.value = keep;
-}
-
-function showHlQuote() {
-  const symbol = document.getElementById('hlSymbol').value;
-  const idx = hlUniverse.findIndex(x => x.name === symbol);
-  if (idx < 0 || !hlCtxs[idx]) {
-    setText('hlStatus', '行情接口不可用，已切换手动交易模式', 'muted');
-    setText('hlMid', '-', 'mono');
-    setText('hlMark', '-', 'mono');
-    setText('hlFunding', '-', 'mono');
-    setText('hlDay', '-', 'muted');
-    return;
-  }
-  const c = hlCtxs[idx];
-  setText('hlMid', c.midPx || '-', 'mono');
-  setText('hlMark', c.markPx || '-', 'mono');
-  setText('hlFunding', c.funding || '-', 'mono');
-  const prev = Number(c.prevDayPx || 0);
-  const mid = Number(c.midPx || 0);
-  const pct = prev > 0 ? ((mid - prev) / prev) * 100 : 0;
-  setText('hlDay', `${pct.toFixed(2)}%`, pct >= 0 ? 'ok' : 'bad');
-  setText('hlStatus', `已刷新 ${symbol} 行情`, 'muted');
-}
-
-function hlTradeUrl(symbol) {
-  return `https://app.hyperliquid.xyz/trade/${encodeURIComponent(symbol)}`;
-}
-
-function checkHlOrder() {
-  const symbol = document.getElementById('hlSymbol').value;
-  const side = document.getElementById('hlSide').value;
-  const lev = Number(document.getElementById('hlLeverage').value || 0);
-  const size = Number(document.getElementById('hlSize').value || 0);
-  const idx = hlUniverse.findIndex(x => x.name === symbol);
-  const maxLev = idx >= 0 ? Number(hlUniverse[idx].maxLeverage || 1) : 20;
-  if (!Number.isFinite(lev) || lev < 1) return '杠杆必须 >= 1';
-  if (lev > maxLev) return `杠杆超限，${symbol} 最大 ${maxLev}x`;
-  if (!Number.isFinite(size) || size <= 0) return '名义仓位必须 > 0';
-  return `检查通过: ${symbol} ${side}, ${lev}x, ${size} USD`;
-}
 
 document.getElementById('connect').onclick = async () => {
   try {
@@ -408,44 +339,9 @@ document.getElementById('clearHistory').onclick = () => {
   setText('status', '已清空本地历史', 'ok');
 };
 
-document.getElementById('hlRefresh').onclick = async () => {
-  try {
-    await fetchHlMeta();
-    fillHlSymbol();
-    showHlQuote();
-  } catch (e) {
-    fillHlSymbol();
-    showHlQuote();
-    setText('hlStatus', '无法连接 Hyperliquid 行情接口，可直接点“去 Hyperliquid 下单”', 'bad');
-  }
-};
-
-document.getElementById('hlSymbol').onchange = () => showHlQuote();
-
-document.getElementById('hlCheck').onclick = () => {
-  const msg = checkHlOrder();
-  setText('hlStatus', msg, msg.startsWith('检查通过') ? 'ok' : 'bad');
-};
-
-document.getElementById('hlTrade').onclick = () => {
-  const symbol = document.getElementById('hlSymbol').value;
-  const msg = checkHlOrder();
-  if (!msg.startsWith('检查通过')) {
-    setText('hlStatus', msg, 'bad');
-    return;
-  }
-  window.open(hlTradeUrl(symbol), '_blank', 'noopener,noreferrer');
-  setText('hlStatus', `已打开 Hyperliquid: ${symbol}`, 'ok');
-};
-
 (async () => {
   loadHistory();
   renderHistory();
   updateOwnerHint();
   await refreshIssuerStats();
-  try {
-    await fetchHlMeta();
-  } catch (_) {}
-  fillHlSymbol();
-  showHlQuote();
 })();
