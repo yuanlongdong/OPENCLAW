@@ -88,6 +88,10 @@
       resize:vertical;
     }
     .history-list { margin:0; padding-left:18px; display:grid; gap:6px; }
+    [data-dev] { display:none !important; }
+    body.dev-mode [data-dev] { display:block !important; }
+    body.dev-mode .row[data-dev] { display:flex !important; }
+    body.dev-mode .col[data-dev] { display:grid !important; }
     .hero-main {
       text-align:center;
       padding:28px 18px 26px;
@@ -175,11 +179,15 @@
         <span id="nativeOut" class="muted">-</span>
       </div>
       <div class="row">
+        <button id="devUnlock" class="secondary">开发者解锁</button>
+        <span id="devState" class="muted">未解锁（普通用户不可见开发者操作区）</span>
+      </div>
+      <div class="row" data-dev>
         <input id="to" placeholder="收款地址" />
         <input id="amount" placeholder="数量" />
         <button id="send">转账</button>
       </div>
-      <div class="col">
+      <div class="col" data-dev>
         <p class="muted">批量空投: 每行一个 `地址,数量`，示例 `0xabc...,100`</p>
         <textarea id="bulkInput" placeholder="0x123...,10&#10;0x456...,25"></textarea>
         <div class="row">
@@ -204,7 +212,7 @@
       <p id="statsStatus" class="muted status"></p>
     </div>
 
-    <div class="card">
+    <div class="card" data-dev>
       <h2>最近转账历史</h2>
       <p class="muted">已分配总额: <span id="historyTotal" class="mono">0 OCL</span></p>
       <div class="row">
@@ -214,7 +222,7 @@
       <ul id="historyList" class="history-list muted"></ul>
     </div>
 
-    <div class="card">
+    <div class="card" data-dev>
       <h2>Hyperliquid 永续 (去中心化)</h2>
       <p class="muted">当前版本: 行情 + 交易入口（下单在 Hyperliquid 官方页面完成）</p>
 
@@ -273,6 +281,7 @@
     contractLinkEl.href = `${EXPLORER_BASE}/token/${window.OPENCLAW_ADDRESS}`;
 
     let provider, signer, account;
+    let isDeveloper = false;
     let staticProvider;
     let hlUniverse = [];
     let hlCtxs = [];
@@ -287,6 +296,26 @@
 
     function shortAddr(addr) {
       return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+    }
+
+    function setDeveloperMode(enabled, message = '') {
+      isDeveloper = !!enabled;
+      document.body.classList.toggle('dev-mode', isDeveloper);
+      setText('devState', message || (isDeveloper ? '已解锁：开发者操作区可见' : '未解锁（普通用户不可见开发者操作区）'), isDeveloper ? 'ok' : 'muted');
+    }
+
+    function requireDeveloper() {
+      if (!isDeveloper) throw new Error('该功能仅开发者可用');
+    }
+
+    async function refreshDeveloperAccess() {
+      if (!ethers.isAddress(OWNER_ADDRESS) || !account) {
+        setDeveloperMode(false, '未配置开发者地址或未连接钱包');
+        return;
+      }
+      const owner = ethers.getAddress(OWNER_ADDRESS);
+      const current = ethers.getAddress(account);
+      setDeveloperMode(current === owner, current === owner ? `开发者已验证: ${shortAddr(current)}` : `当前钱包 ${shortAddr(current)} 非开发者地址`);
     }
 
     async function refreshNativeBalance() {
@@ -428,6 +457,7 @@
       provider = new ethers.BrowserProvider(window.ethereum, 'any');
       signer = await provider.getSigner();
       document.getElementById('account').textContent = account;
+      await refreshDeveloperAccess();
     }
 
     function getContract(readonly = false) {
@@ -548,11 +578,21 @@
     document.getElementById('connect').onclick = async () => {
       try {
         await connect();
+        await refreshDeveloperAccess();
         await refreshNativeBalance();
         await refreshIssuerStats();
         setText('status', '钱包已连接', 'ok');
       } catch (e) {
         setText('status', e.message || '连接失败', 'bad');
+      }
+    };
+
+    document.getElementById('devUnlock').onclick = async () => {
+      try {
+        if (!account) await connect();
+        await refreshDeveloperAccess();
+      } catch (e) {
+        setText('devState', e.message || '开发者解锁失败', 'bad');
       }
     };
 
@@ -610,6 +650,7 @@
 
     document.getElementById('send').onclick = async () => {
       try {
+        requireDeveloper();
         if (!account) await connect();
         await ensureTokenContractReady();
         const to = document.getElementById('to').value.trim();
@@ -630,6 +671,7 @@
 
     document.getElementById('bulkPreview').onclick = () => {
       try {
+        requireDeveloper();
         const parsed = parseBulkRows(document.getElementById('bulkInput').value);
         const total = parsed.reduce((s, x) => s + Number(x.amount), 0);
         setText('status', `空投预览: ${parsed.length} 笔, 合计 ${total} OCL`, 'ok');
@@ -640,6 +682,7 @@
 
     document.getElementById('bulkSend').onclick = async () => {
       try {
+        requireDeveloper();
         if (!account) await connect();
         await ensureTokenContractReady();
         const parsed = parseBulkRows(document.getElementById('bulkInput').value);
@@ -664,12 +707,14 @@
     };
 
     document.getElementById('refreshHistory').onclick = () => {
+      if (!isDeveloper) return;
       loadHistory();
       renderHistory();
       setText('status', '已刷新本地历史', 'ok');
     };
 
     document.getElementById('clearHistory').onclick = () => {
+      if (!isDeveloper) return;
       transferHistory = [];
       saveHistory();
       renderHistory();
@@ -677,6 +722,7 @@
     };
 
     document.getElementById('hlRefresh').onclick = async () => {
+      if (!isDeveloper) return;
       try {
         await fetchHlMeta();
         fillHlSymbol();
@@ -691,12 +737,14 @@
     document.getElementById('hlSymbol').onchange = () => showHlQuote();
 
     document.getElementById('hlCheck').onclick = () => {
+      if (!isDeveloper) return;
       const msg = checkHlOrder();
       const ok = msg.startsWith('检查通过');
       setText('hlStatus', msg, ok ? 'ok' : 'bad');
     };
 
     document.getElementById('hlTrade').onclick = () => {
+      if (!isDeveloper) return;
       const symbol = document.getElementById('hlSymbol').value;
       const msg = checkHlOrder();
       if (!msg.startsWith('检查通过')) {
@@ -709,18 +757,12 @@
     };
 
     (async () => {
+      setDeveloperMode(false);
       loadHistory();
       renderHistory();
       await refreshIssuerStats();
-      try {
-        await fetchHlMeta();
-        fillHlSymbol();
-        showHlQuote();
-      } catch (e) {
-        fillHlSymbol();
-        showHlQuote();
-        setText('hlStatus', '无法连接 Hyperliquid 行情接口，已启用手动交易模式', 'bad');
-      }
+      fillHlSymbol();
+      showHlQuote();
     })();
   </script>
 </body>
