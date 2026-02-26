@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenClaw Developer</title>
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0d1117;
+      --card:#161b22;
+      --txt:#e6edf3;
+      --muted:#8b949e;
+      --accent:#2f81f7;
+      --ok:#1f9d55;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      font-family: Satoshi, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: #070d18;
+      color:var(--txt);
+      overflow-x:hidden;
+    }
+    .wrap { max-width:940px; margin:20px auto 40px; padding:16px; display:grid; gap:14px; position:relative; z-index:2; }
+    .stars, .nebula { position:fixed; inset:0; pointer-events:none; z-index:0; }
+    .stars {
+      background-image:
+        radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,.8), transparent 70%),
+        radial-gradient(1.5px 1.5px at 30% 70%, rgba(255,255,255,.55), transparent 70%),
+        radial-gradient(1.8px 1.8px at 80% 30%, rgba(255,255,255,.6), transparent 70%),
+        radial-gradient(1.2px 1.2px at 60% 55%, rgba(255,255,255,.55), transparent 70%),
+        radial-gradient(1.4px 1.4px at 90% 80%, rgba(255,255,255,.5), transparent 70%);
+      opacity:.45;
+      animation: twinkle 9s ease-in-out infinite alternate;
+    }
+    .nebula {
+      background:
+        radial-gradient(35% 45% at 15% 10%, rgba(66,126,255,.24), transparent 70%),
+        radial-gradient(25% 35% at 82% 22%, rgba(255,98,72,.18), transparent 75%),
+        radial-gradient(30% 40% at 55% 75%, rgba(58,196,255,.13), transparent 75%);
+      filter: blur(8px);
+      animation: drift 24s ease-in-out infinite alternate;
+    }
+    .card { background:var(--card); border:1px solid #30363d; border-radius:14px; padding:20px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; margin:10px 0; align-items:center; }
+    .col { display:grid; gap:10px; }
+    button {
+      background:var(--accent);
+      color:white;
+      border:none;
+      border-radius:10px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-weight:600;
+    }
+    button.secondary { background:#374151; }
+    button.warn { background:var(--warn); color:#111827; }
+    input, select {
+      flex:1;
+      min-width:160px;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid #30363d;
+      background:#0b0f14;
+      color:var(--txt);
+    }
+    .muted { color:var(--muted); font-size:14px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; word-break:break-all; }
+    .grid-2 { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:10px; }
+    .kv { padding:10px; border:1px solid #30363d; border-radius:10px; background:#0b0f14; }
+    .kv b { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+    .status { min-height:20px; }
+    .ok { color:var(--ok); }
+    .bad { color:var(--bad); }
+    textarea {
+      width:100%;
+      min-height:120px;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid #30363d;
+      background:#0b0f14;
+      color:var(--txt);
+      resize:vertical;
+    }
+    .history-list { margin:0; padding-left:18px; display:grid; gap:6px; }
+    [data-dev] { display:none !important; }
+    body.dev-mode [data-dev] { display:block !important; }
+    body.dev-mode .row[data-dev] { display:flex !important; }
+    body.dev-mode .col[data-dev] { display:grid !important; }
+    .hero-main {
+      text-align:center;
+      padding:28px 18px 26px;
+      border-radius:18px;
+      border:1px solid rgba(79,100,141,.35);
+      background: linear-gradient(180deg, rgba(20,30,50,.72), rgba(11,18,33,.75));
+      box-shadow: 0 20px 55px rgba(0,0,0,.35);
+    }
+    .lobster-mark {
+      width:84px;
+      height:84px;
+      margin:0 auto 14px;
+      animation: floaty 3.2s ease-in-out infinite;
+    }
+    .hero-title {
+      font-family: "Clash Display", Satoshi, sans-serif;
+      font-size: clamp(46px, 8vw, 72px);
+      line-height:1;
+      margin:0 0 8px;
+      letter-spacing:.3px;
+    }
+    .hero-tagline {
+      margin:0;
+      font-size: clamp(20px, 3.2vw, 30px);
+      color:#dbe7ff;
+      font-family: "Clash Display", Satoshi, sans-serif;
+      font-weight:600;
+    }
+    .hero-desc {
+      max-width:740px;
+      margin:14px auto 0;
+      color:#a8b7d3;
+      font-size:16px;
+      line-height:1.65;
+    }
+    .hero-actions { justify-content:center; margin-top:16px; }
+    @keyframes twinkle { from { opacity:.28; } to { opacity:.58; } }
+    @keyframes drift { from { transform: translateY(-10px) scale(1.03); } to { transform: translateY(12px) scale(1); } }
+    @keyframes floaty { 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-8px);} }
+  </style>
+</head>
+<body>
+  <div class="stars"></div>
+  <div class="nebula"></div>
+  <div class="wrap">
+    <div class="hero-main">
+      <svg class="lobster-mark" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="lobster-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ff7a5a"></stop>
+            <stop offset="100%" stop-color="#ff4b4b"></stop>
+          </linearGradient>
+        </defs>
+        <path d="M60 10 C30 10 15 35 15 55 C15 75 30 95 45 100 L45 110 L55 110 L55 100 C55 100 60 102 65 100 L65 110 L75 110 L75 100 C90 95 105 75 105 55 C105 35 90 10 60 10Z" fill="url(#lobster-gradient)"></path>
+        <path d="M20 45 C5 40 0 50 5 60 C10 70 20 65 25 55 C28 48 25 45 20 45Z" fill="url(#lobster-gradient)"></path>
+        <path d="M100 45 C115 40 120 50 115 60 C110 70 100 65 95 55 C92 48 95 45 100 45Z" fill="url(#lobster-gradient)"></path>
+        <circle cx="45" cy="35" r="6" fill="#090e18"></circle>
+        <circle cx="75" cy="35" r="6" fill="#090e18"></circle>
+        <circle cx="46" cy="34" r="2" fill="#66ebff"></circle>
+        <circle cx="76" cy="34" r="2" fill="#66ebff"></circle>
+      </svg>
+      <h1 class="hero-title">OpenClaw AI Developer</h1>
+      <p class="hero-tagline">The AI that actually does things.</p>
+      <p class="hero-desc">OpenClaw AI 是能真实执行任务的 AI 机器人。OCL 是其生态代币，用于机器人能力调用、功能解锁与生态激励。</p>
+      <div class="row hero-actions">
+        <a href="./whitepaper.html" target="_blank" rel="noopener noreferrer"><button class="secondary">查看白皮书</button></a>
+      </div>
+    </div>
+    <div class="card">
+      <h2>OpenClaw (OCL)</h2>
+      <p class="muted">网络: <span id="networkLabel"></span> (chainId <span id="chainIdLabel"></span>)</p>
+      <p class="muted">合约: <a class="mono" id="contractLink" target="_blank" rel="noopener noreferrer"></a></p>
+      <div class="row">
+        <button id="connect">连接钱包</button>
+        <button id="addToken" class="secondary">添加 OCL 到钱包</button>
+        <span id="account" class="muted"></span>
+      </div>
+      <div class="row">
+        <button id="balance">查询 OCL 余额</button>
+        <span id="balanceOut" class="muted"></span>
+      </div>
+      <div class="row">
+        <b><span id="nativeLabel">原生币余额:</span></b>
+        <span id="nativeOut" class="muted">-</span>
+      </div>
+      <div class="row" data-dev>
+        <input id="to" placeholder="收款地址" />
+        <input id="amount" placeholder="数量" />
+        <button id="send">转账</button>
+      </div>
+      <div class="col" data-dev>
+        <p class="muted">批量空投: 每行一个 `地址,数量`，示例 `0xabc...,100`</p>
+        <textarea id="bulkInput" placeholder="0x123...,10&#10;0x456...,25"></textarea>
+        <div class="row">
+          <button id="bulkPreview" class="secondary">预览空投</button>
+          <button id="bulkSend" class="warn">执行空投</button>
+        </div>
+      </div>
+      <p id="status" class="muted status"></p>
+    </div>
+
+    <div class="card">
+      <h2>发行看板</h2>
+      <div class="row">
+        <button id="refreshStats" class="secondary">刷新看板</button>
+      </div>
+      <div class="grid-2">
+        <div class="kv"><b>总发行量</b><span id="statTotal">-</span></div>
+        <div class="kv"><b>开发者持仓</b><span id="statOwner">-</span></div>
+        <div class="kv"><b>开发者持仓占比</b><span id="statOwnerPct">-</span></div>
+        <div class="kv"><b>持币地址数</b><span id="statHolders">-</span></div>
+      </div>
+      <p id="statsStatus" class="muted status"></p>
+    </div>
+
+    <div class="card" data-dev>
+      <h2>最近转账历史</h2>
+      <p class="muted">已分配总额: <span id="historyTotal" class="mono">0 OCL</span></p>
+      <div class="row">
+        <button id="refreshHistory" class="secondary">刷新历史</button>
+        <button id="clearHistory" class="secondary">清空历史</button>
+      </div>
+      <ul id="historyList" class="history-list muted"></ul>
+    </div>
+
+    <div class="card" data-dev>
+      <h2>Hyperliquid 永续 (去中心化)</h2>
+      <p class="muted">当前版本: 行情 + 交易入口（下单在 Hyperliquid 官方页面完成）</p>
+
+      <div class="row">
+        <select id="hlSymbol"></select>
+        <button id="hlRefresh" class="secondary">刷新行情</button>
+      </div>
+
+      <div class="grid-2">
+        <div class="kv"><b>中间价 Mid</b><span id="hlMid">-</span></div>
+        <div class="kv"><b>标记价 Mark</b><span id="hlMark">-</span></div>
+        <div class="kv"><b>资金费率 Funding</b><span id="hlFunding">-</span></div>
+        <div class="kv"><b>24h 变动</b><span id="hlDay">-</span></div>
+      </div>
+
+      <div class="row">
+        <select id="hlSide">
+          <option value="LONG">LONG</option>
+          <option value="SHORT">SHORT</option>
+        </select>
+        <input id="hlLeverage" type="number" min="1" step="1" value="5" placeholder="杠杆" />
+        <input id="hlSize" type="number" min="0" step="0.001" placeholder="名义仓位(USD)" />
+      </div>
+
+      <div class="row">
+        <button id="hlCheck" class="warn">下单前检查</button>
+        <button id="hlTrade">去 Hyperliquid 下单</button>
+      </div>
+      <p id="hlStatus" class="muted status"></p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+  <script src="./config.js"></script>
+  <script>
+    const abi = [
+      'function balanceOf(address) view returns (uint256)',
+      'function totalSupply() view returns (uint256)',
+      'function transfer(address,uint256) returns (bool)'
+    ];
+    const TOKEN_DECIMALS = 18;
+    const REQUIRED_CHAIN_ID = BigInt(window.OPENCLAW_CHAIN_ID || 97);
+    const REQUIRED_CHAIN_HEX = `0x${REQUIRED_CHAIN_ID.toString(16)}`;
+    const NETWORK_NAME = window.OPENCLAW_CHAIN_NAME || 'BSC Testnet';
+    const CHAIN_RPC_URL = window.OPENCLAW_RPC_URL || 'https://bsc-testnet-rpc.publicnode.com';
+    const EXPLORER_BASE = window.OPENCLAW_EXPLORER || 'https://testnet.bscscan.com';
+    const NATIVE_SYMBOL = window.OPENCLAW_NATIVE_SYMBOL || 'tBNB';
+    const OWNER_ADDRESS = window.OPENCLAW_OWNER || '';
+    const HISTORY_KEY = 'openclaw_transfer_history_v1';
+
+    document.getElementById('networkLabel').textContent = NETWORK_NAME;
+    document.getElementById('chainIdLabel').textContent = REQUIRED_CHAIN_ID.toString();
+    document.getElementById('nativeLabel').textContent = `${NATIVE_SYMBOL} 余额:`;
+    const contractLinkEl = document.getElementById('contractLink');
+    contractLinkEl.textContent = window.OPENCLAW_ADDRESS;
+    contractLinkEl.href = `${EXPLORER_BASE}/token/${window.OPENCLAW_ADDRESS}`;
+
+    let provider, signer, account;
+    let isDeveloper = false;
+    let staticProvider;
+    let hlUniverse = [];
+    let hlCtxs = [];
+    let transferHistory = [];
+    const hlFallbackSymbols = ['BTC', 'ETH', 'SOL', 'BNB', 'DOGE', 'XRP', 'ARB', 'OP', 'LINK', 'AAVE'];
+
+    function setText(id, val, cls = 'muted') {
+      const el = document.getElementById(id);
+      el.textContent = val;
+      el.className = cls;
+    }
+
+    function shortAddr(addr) {
+      return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+    }
+
+    function setDeveloperMode(enabled) {
+      isDeveloper = !!enabled;
+      document.body.classList.toggle('dev-mode', isDeveloper);
+    }
+
+    function requireDeveloper() {
+      if (!isDeveloper) throw new Error('该功能仅开发者可用');
+    }
+
+    async function refreshDeveloperAccess() {
+      if (!ethers.isAddress(OWNER_ADDRESS) || !account) {
+        setDeveloperMode(false);
+        return;
+      }
+      const owner = ethers.getAddress(OWNER_ADDRESS);
+      const current = ethers.getAddress(account);
+      setDeveloperMode(current === owner);
+    }
+
+    async function refreshNativeBalance() {
+      if (!provider || !account) return;
+      const wei = await provider.getBalance(account);
+      setText('nativeOut', `${ethers.formatUnits(wei, 18)} ${NATIVE_SYMBOL}`, 'mono');
+    }
+
+    function getStaticProvider() {
+      if (!staticProvider) staticProvider = new ethers.JsonRpcProvider(CHAIN_RPC_URL);
+      return staticProvider;
+    }
+
+    async function fetchHolderCount() {
+      const key = String(window.BSCSCAN_API_KEY || '').trim();
+      if (!key) return null;
+      const host = REQUIRED_CHAIN_ID === 56n ? 'https://api.bscscan.com' : 'https://api-testnet.bscscan.com';
+      const url = `${host}/api?module=token&action=tokenholdercount&contractaddress=${window.OPENCLAW_ADDRESS}&apikey=${key}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('持币地址数接口请求失败');
+      const data = await res.json();
+      if (data.status !== '1') throw new Error(data.message || '持币地址数接口失败');
+      const n = Number(data.result);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    async function refreshIssuerStats() {
+      try {
+        const p = getStaticProvider();
+        const c = new ethers.Contract(window.OPENCLAW_ADDRESS, abi, p);
+        const totalBn = await c.totalSupply();
+        const total = Number(ethers.formatUnits(totalBn, TOKEN_DECIMALS));
+        setText('statTotal', `${total.toLocaleString()} OCL`, 'mono');
+        if (ethers.isAddress(OWNER_ADDRESS)) {
+          const ownerBn = await c.balanceOf(OWNER_ADDRESS);
+          const owner = Number(ethers.formatUnits(ownerBn, TOKEN_DECIMALS));
+          const pct = total > 0 ? (owner / total) * 100 : 0;
+          setText('statOwner', `${owner.toLocaleString()} OCL`, 'mono');
+          setText('statOwnerPct', `${pct.toFixed(4)}%`, 'mono');
+        } else {
+          setText('statOwner', '未配置 OPENCLAW_OWNER', 'muted');
+          setText('statOwnerPct', '-', 'muted');
+        }
+        const holders = await fetchHolderCount().catch(() => null);
+        setText('statHolders', holders == null ? '未配置 BSCSCAN_API_KEY' : String(holders), 'mono');
+        setText('statsStatus', '发行看板已刷新', 'ok');
+      } catch (e) {
+        setText('statsStatus', e.message || '发行看板刷新失败', 'bad');
+      }
+    }
+
+    function loadHistory() {
+      try {
+        const raw = localStorage.getItem(HISTORY_KEY);
+        transferHistory = raw ? JSON.parse(raw) : [];
+      } catch (_) {
+        transferHistory = [];
+      }
+    }
+
+    function saveHistory() {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(transferHistory.slice(0, 100)));
+    }
+
+    function addHistoryItem(item) {
+      transferHistory.unshift(item);
+      transferHistory = transferHistory.slice(0, 100);
+      saveHistory();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const ul = document.getElementById('historyList');
+      let total = 0;
+      ul.innerHTML = '';
+      if (!transferHistory.length) {
+        const li = document.createElement('li');
+        li.textContent = '暂无转账记录';
+        ul.appendChild(li);
+        setText('historyTotal', '0 OCL', 'mono');
+        return;
+      }
+      for (const r of transferHistory) {
+        const li = document.createElement('li');
+        const ts = new Date(r.time).toLocaleString();
+        li.innerHTML = `<span class=\"mono\">${shortAddr(r.from)} -> ${shortAddr(r.to)}</span> | ${r.amount} OCL | <a class=\"mono\" href=\"${EXPLORER_BASE}/tx/${r.hash}\" target=\"_blank\" rel=\"noopener noreferrer\">${r.hash.slice(0, 10)}...</a> | ${ts}`;
+        ul.appendChild(li);
+        const n = Number(r.amount || 0);
+        if (Number.isFinite(n) && n > 0) total += n;
+      }
+      setText('historyTotal', `${total} OCL`, 'mono');
+    }
+
+    function parseBulkRows(text) {
+      // Accept mobile paste variants: Chinese comma/semicolon, one-line multi-items,
+      // and hidden whitespace characters copied from chat apps.
+      const normalized = String(text || '')
+        .replace(/[，]/g, ',')
+        .replace(/[；;]/g, '\n')
+        .replace(/\r/g, '\n')
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        .replace(/\s+(?=0x[a-fA-F0-9]{40}\s*,)/g, '\n');
+      const rows = normalized.split('\n').map(x => x.trim()).filter(Boolean);
+      const parsed = [];
+      for (let i = 0; i < rows.length; i++) {
+        const line = rows[i];
+        const byComma = line.split(',').map(x => x.trim()).filter(Boolean);
+        let to = '';
+        let amount = '';
+        if (byComma.length === 2) {
+          to = byComma[0];
+          amount = byComma[1];
+        } else {
+          const bySpace = line.split(/\s+/).map(x => x.trim()).filter(Boolean);
+          if (bySpace.length === 2) {
+            to = bySpace[0];
+            amount = bySpace[1];
+          } else {
+            throw new Error(`第 ${i + 1} 行格式错误，应为 地址,数量`);
+          }
+        }
+        if (!ethers.isAddress(to)) throw new Error(`第 ${i + 1} 行地址无效`);
+        const n = Number(amount);
+        if (!Number.isFinite(n) || n <= 0) throw new Error(`第 ${i + 1} 行数量无效`);
+        parsed.push({ to: to.toLowerCase(), amount: String(n) });
+      }
+      if (parsed.length === 0) throw new Error('空投列表为空');
+      if (parsed.length > 100) throw new Error('单次最多 100 行，避免超时');
+      return parsed;
+    }
+
+    async function connect() {
+      if (!window.ethereum) throw new Error('未找到 MetaMask，请在钱包内置浏览器打开');
+      provider = new ethers.BrowserProvider(window.ethereum, 'any');
+      const accs = await provider.send('eth_requestAccounts', []);
+      account = accs[0];
+      await ensureRequiredNetwork();
+      // Recreate provider/signer after network switch to avoid ethers NETWORK_ERROR.
+      provider = new ethers.BrowserProvider(window.ethereum, 'any');
+      signer = await provider.getSigner();
+      document.getElementById('account').textContent = account;
+      await refreshDeveloperAccess();
+    }
+
+    function getContract(readonly = false) {
+      if (!provider) provider = new ethers.BrowserProvider(window.ethereum);
+      return new ethers.Contract(window.OPENCLAW_ADDRESS, abi, readonly ? provider : signer);
+    }
+
+    async function ensureRequiredNetwork() {
+      const net = await provider.getNetwork();
+      if (net.chainId === REQUIRED_CHAIN_ID) return;
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: REQUIRED_CHAIN_HEX }]
+        });
+      } catch (e) {
+        const code = e && (e.code === 4902 || e.code === -32603);
+        if (code) {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: REQUIRED_CHAIN_HEX,
+                chainName: NETWORK_NAME,
+                nativeCurrency: { name: NATIVE_SYMBOL, symbol: NATIVE_SYMBOL, decimals: 18 },
+                rpcUrls: [CHAIN_RPC_URL],
+                blockExplorerUrls: [EXPLORER_BASE]
+              }]
+            });
+            return;
+          } catch (_) {
+            throw new Error(`请在钱包确认添加 ${NETWORK_NAME} 网络`);
+          }
+        }
+        throw new Error(`请切换到 ${NETWORK_NAME} (chainId ${REQUIRED_CHAIN_ID.toString()}) 后重试`);
+      }
+    }
+
+    async function ensureTokenContractReady() {
+      if (!provider) provider = new ethers.BrowserProvider(window.ethereum);
+      const net = await provider.getNetwork();
+      if (net.chainId !== REQUIRED_CHAIN_ID) {
+        throw new Error(`当前不是 ${NETWORK_NAME}，请先切换网络`);
+      }
+      const code = await provider.getCode(window.OPENCLAW_ADDRESS);
+      if (!code || code === '0x') {
+        throw new Error(`该网络上未找到 OCL 合约，请确认钱包网络为 ${NETWORK_NAME}`);
+      }
+    }
+
+    async function fetchHlMeta() {
+      const res = await fetch('https://api.hyperliquid.xyz/info', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ type: 'metaAndAssetCtxs' })
+      });
+      if (!res.ok) throw new Error('Hyperliquid 行情接口失败');
+      const data = await res.json();
+      hlUniverse = data[0].universe || [];
+      hlCtxs = data[1] || [];
+    }
+
+    function fillHlSymbol() {
+      const sel = document.getElementById('hlSymbol');
+      const keep = sel.value;
+      sel.innerHTML = '';
+      const top = ['BTC', 'ETH', 'SOL', 'BNB', 'DOGE', 'XRP'];
+      const names = hlUniverse.length > 0 ? hlUniverse.map(x => x.name) : hlFallbackSymbols;
+      const ordered = [...new Set([...top.filter(x => names.includes(x)), ...names])].slice(0, 120);
+      for (const n of ordered) {
+        const o = document.createElement('option');
+        o.value = n;
+        o.textContent = n;
+        sel.appendChild(o);
+      }
+      if (keep && ordered.includes(keep)) sel.value = keep;
+    }
+
+    function showHlQuote() {
+      const symbol = document.getElementById('hlSymbol').value;
+      const idx = hlUniverse.findIndex(x => x.name === symbol);
+      if (idx < 0 || !hlCtxs[idx]) {
+        setText('hlStatus', '行情接口不可用，已切换手动交易模式', 'muted');
+        setText('hlMid', '-', 'mono');
+        setText('hlMark', '-', 'mono');
+        setText('hlFunding', '-', 'mono');
+        setText('hlDay', '-', 'muted');
+        return;
+      }
+      const c = hlCtxs[idx];
+      setText('hlMid', c.midPx || '-', 'mono');
+      setText('hlMark', c.markPx || '-', 'mono');
+      setText('hlFunding', c.funding || '-', 'mono');
+      const prev = Number(c.prevDayPx || 0);
+      const mid = Number(c.midPx || 0);
+      const pct = prev > 0 ? ((mid - prev) / prev) * 100 : 0;
+      setText('hlDay', `${pct.toFixed(2)}%`, pct >= 0 ? 'ok' : 'bad');
+      setText('hlStatus', `已刷新 ${symbol} 行情`, 'muted');
+    }
+
+    function hlTradeUrl(symbol) {
+      return `https://app.hyperliquid.xyz/trade/${encodeURIComponent(symbol)}`;
+    }
+
+    function checkHlOrder() {
+      const symbol = document.getElementById('hlSymbol').value;
+      const side = document.getElementById('hlSide').value;
+      const lev = Number(document.getElementById('hlLeverage').value || 0);
+      const size = Number(document.getElementById('hlSize').value || 0);
+      const idx = hlUniverse.findIndex(x => x.name === symbol);
+      const maxLev = idx >= 0 ? Number(hlUniverse[idx].maxLeverage || 1) : 20;
+      if (!Number.isFinite(lev) || lev < 1) return '杠杆必须 >= 1';
+      if (lev > maxLev) return `杠杆超限，${symbol} 最大 ${maxLev}x`;
+      if (!Number.isFinite(size) || size <= 0) return '名义仓位必须 > 0';
+      return `检查通过: ${symbol} ${side}, ${lev}x, ${size} USD`;
+    }
+
+    document.getElementById('connect').onclick = async () => {
+      try {
+        await connect();
+        await refreshDeveloperAccess();
+        await refreshNativeBalance();
+        await refreshIssuerStats();
+        setText('status', '钱包已连接', 'ok');
+      } catch (e) {
+        setText('status', e.message || '连接失败', 'bad');
+      }
+    };
+
+    document.getElementById('addToken').onclick = async () => {
+      try {
+        if (!window.ethereum) throw new Error('未找到钱包环境');
+        const ok = await window.ethereum.request({
+          method: 'wallet_watchAsset',
+          params: {
+            type: 'ERC20',
+            options: {
+              address: window.OPENCLAW_ADDRESS,
+              symbol: 'OCL',
+              decimals: 18
+            }
+          }
+        });
+        if (ok) {
+          setText('status', '已请求添加 OCL，请在钱包确认', 'ok');
+        } else {
+          setText('status', '钱包未添加 OCL（用户取消或钱包不支持）', 'bad');
+        }
+      } catch (e) {
+        setText('status', e.message || '添加代币失败', 'bad');
+      }
+    };
+
+    document.getElementById('balance').onclick = async () => {
+      try {
+        if (!account) await connect();
+        await ensureTokenContractReady();
+        const c = getContract(true);
+        const b = await c.balanceOf(account);
+        setText('balanceOut', `${ethers.formatUnits(b, TOKEN_DECIMALS)} OCL`, 'mono');
+        await refreshNativeBalance();
+        await refreshIssuerStats();
+      } catch (e) {
+        if ((e && e.code === 'NETWORK_ERROR') || String(e?.message || '').includes('network changed')) {
+          try {
+            provider = new ethers.BrowserProvider(window.ethereum, 'any');
+            if (!account) await connect();
+            await ensureTokenContractReady();
+            const c = getContract(true);
+            const b = await c.balanceOf(account);
+            setText('balanceOut', `${ethers.formatUnits(b, TOKEN_DECIMALS)} OCL`, 'mono');
+            await refreshNativeBalance();
+            await refreshIssuerStats();
+            setText('status', '已自动重连网络并完成查询', 'ok');
+            return;
+          } catch (_) {}
+        }
+        setText('status', e.message || '查询失败', 'bad');
+      }
+    };
+
+    document.getElementById('send').onclick = async () => {
+      try {
+        requireDeveloper();
+        if (!account) await connect();
+        await ensureTokenContractReady();
+        const to = document.getElementById('to').value.trim();
+        const amount = document.getElementById('amount').value.trim();
+        if (!ethers.isAddress(to)) throw new Error('收款地址无效');
+        if (!(Number(amount) > 0)) throw new Error('数量必须 > 0');
+        const c = getContract(false);
+        const tx = await c.transfer(to, ethers.parseUnits(amount, TOKEN_DECIMALS));
+        setText('status', `交易已提交: ${tx.hash}`, 'muted');
+        await tx.wait();
+        setText('status', `转账成功: ${tx.hash}`, 'ok');
+        addHistoryItem({ from: account, to, amount, hash: tx.hash, time: Date.now() });
+        await refreshIssuerStats();
+      } catch (e) {
+        setText('status', e.message || '转账失败', 'bad');
+      }
+    };
+
+    document.getElementById('bulkPreview').onclick = () => {
+      try {
+        requireDeveloper();
+        const parsed = parseBulkRows(document.getElementById('bulkInput').value);
+        const total = parsed.reduce((s, x) => s + Number(x.amount), 0);
+        setText('status', `空投预览: ${parsed.length} 笔, 合计 ${total} OCL`, 'ok');
+      } catch (e) {
+        setText('status', e.message || '预览失败', 'bad');
+      }
+    };
+
+    document.getElementById('bulkSend').onclick = async () => {
+      try {
+        requireDeveloper();
+        if (!account) await connect();
+        await ensureTokenContractReady();
+        const parsed = parseBulkRows(document.getElementById('bulkInput').value);
+        setText('status', `开始空投，共 ${parsed.length} 笔...`, 'muted');
+        const c = getContract(false);
+        for (let i = 0; i < parsed.length; i++) {
+          const row = parsed[i];
+          setText('status', `发送中 ${i + 1}/${parsed.length}: ${shortAddr(row.to)} ${row.amount} OCL`, 'muted');
+          const tx = await c.transfer(row.to, ethers.parseUnits(row.amount, TOKEN_DECIMALS));
+          await tx.wait();
+          addHistoryItem({ from: account, to: row.to, amount: row.amount, hash: tx.hash, time: Date.now() });
+        }
+        setText('status', `空投完成，共 ${parsed.length} 笔`, 'ok');
+        await refreshIssuerStats();
+      } catch (e) {
+        setText('status', e.message || '空投失败', 'bad');
+      }
+    };
+
+    document.getElementById('refreshStats').onclick = async () => {
+      await refreshIssuerStats();
+    };
+
+    document.getElementById('refreshHistory').onclick = () => {
+      if (!isDeveloper) return;
+      loadHistory();
+      renderHistory();
+      setText('status', '已刷新本地历史', 'ok');
+    };
+
+    document.getElementById('clearHistory').onclick = () => {
+      if (!isDeveloper) return;
+      transferHistory = [];
+      saveHistory();
+      renderHistory();
+      setText('status', '已清空本地历史', 'ok');
+    };
+
+    document.getElementById('hlRefresh').onclick = async () => {
+      if (!isDeveloper) return;
+      try {
+        await fetchHlMeta();
+        fillHlSymbol();
+        showHlQuote();
+      } catch (e) {
+        fillHlSymbol();
+        showHlQuote();
+        setText('hlStatus', '无法连接 Hyperliquid 行情接口，可直接点“去 Hyperliquid 下单”', 'bad');
+      }
+    };
+
+    document.getElementById('hlSymbol').onchange = () => showHlQuote();
+
+    document.getElementById('hlCheck').onclick = () => {
+      if (!isDeveloper) return;
+      const msg = checkHlOrder();
+      const ok = msg.startsWith('检查通过');
+      setText('hlStatus', msg, ok ? 'ok' : 'bad');
+    };
+
+    document.getElementById('hlTrade').onclick = () => {
+      if (!isDeveloper) return;
+      const symbol = document.getElementById('hlSymbol').value;
+      const msg = checkHlOrder();
+      if (!msg.startsWith('检查通过')) {
+        setText('hlStatus', msg, 'bad');
+        return;
+      }
+      const url = hlTradeUrl(symbol);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      setText('hlStatus', `已打开 Hyperliquid: ${symbol}`, 'ok');
+    };
+
+    (async () => {
+      setDeveloperMode(false);
+      loadHistory();
+      renderHistory();
+      await refreshIssuerStats();
+      fillHlSymbol();
+      showHlQuote();
+    })();
+  </script>
+</body>
+</html>
