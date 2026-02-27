@@ -1,43 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="OpenClaw AI logo">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="Horse token cover">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#071426"/>
-      <stop offset="55%" stop-color="#0f2744"/>
-      <stop offset="100%" stop-color="#0b1628"/>
+      <stop offset="0%" stop-color="#0d1627"/>
+      <stop offset="52%" stop-color="#1a2d47"/>
+      <stop offset="100%" stop-color="#0b1423"/>
     </linearGradient>
-    <linearGradient id="claw" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ff7350"/>
-      <stop offset="100%" stop-color="#ff3f3f"/>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f5d57f"/>
+      <stop offset="100%" stop-color="#d49b3e"/>
     </linearGradient>
-    <linearGradient id="shell" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ffd6bf"/>
-      <stop offset="100%" stop-color="#ffb28f"/>
+    <linearGradient id="mane" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffe7ad"/>
+      <stop offset="100%" stop-color="#f2bf61"/>
     </linearGradient>
     <filter id="glow">
-      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feGaussianBlur stdDeviation="8" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
   </defs>
+
   <rect width="1200" height="675" fill="url(#bg)"/>
-  <circle cx="940" cy="130" r="140" fill="#1f3f72" opacity="0.35"/>
-  <circle cx="220" cy="560" r="180" fill="#1a325a" opacity="0.30"/>
-  <g transform="translate(220 120)">
-    <ellipse cx="370" cy="270" rx="190" ry="145" fill="url(#shell)"/>
-    <circle cx="300" cy="220" r="20" fill="#111"/>
-    <circle cx="440" cy="220" r="20" fill="#111"/>
-    <circle cx="295" cy="215" r="5" fill="#fff"/>
-    <circle cx="435" cy="215" r="5" fill="#fff"/>
-    <path d="M350 250 q20 22 40 0" stroke="#8a2d23" stroke-width="8" fill="none" stroke-linecap="round"/>
-    <path d="M175 255 q-85 -100 -20 -165 q55 -55 125 0 q45 40 -10 110 z" fill="url(#claw)" filter="url(#glow)"/>
-    <path d="M560 255 q85 -100 20 -165 q-55 -55 -125 0 q-45 40 10 110 z" fill="url(#claw)" filter="url(#glow)"/>
-    <rect x="252" y="355" width="26" height="105" rx="12" fill="#ff8f69"/>
-    <rect x="312" y="365" width="26" height="105" rx="12" fill="#ff8f69"/>
-    <rect x="402" y="365" width="26" height="105" rx="12" fill="#ff8f69"/>
-    <rect x="462" y="355" width="26" height="105" rx="12" fill="#ff8f69"/>
+  <circle cx="980" cy="120" r="130" fill="#2a4468" opacity="0.35"/>
+  <circle cx="220" cy="580" r="180" fill="#213a5f" opacity="0.28"/>
+
+  <g transform="translate(255 110)" filter="url(#glow)">
+    <path d="M456 70c-34 3-66 25-80 55l-22 49c-4 8-1 18 8 23l16 9-16 42c-9 25-34 34-58 29l-61-13c-13-3-24 8-21 21l16 67c2 10 11 17 22 17h181c71 0 132-55 137-126l8-98c2-22-5-43-20-59-27-27-54-35-90-33z" fill="url(#gold)"/>
+    <path d="M364 126c-11 20-16 47-14 75l41-29 20-50z" fill="#cf8d37"/>
+    <path d="M460 66c-53-30-104-20-137 10l-39-33c-7-6-17-4-22 3l-8 10c-5 7-4 17 2 22l75 59c11-17 28-31 50-39 22-8 52-8 79-2z" fill="url(#mane)"/>
+    <ellipse cx="486" cy="170" rx="18" ry="14" fill="#121212"/>
+    <circle cx="492" cy="166" r="4" fill="#fff"/>
+    <path d="M622 252c-19 17-42 31-67 41l-17-28c22-8 42-19 58-34z" fill="#b5772e"/>
+    <path d="M628 235c8 0 15 7 15 15s-7 15-15 15-15-7-15-15 7-15 15-15z" fill="#f3c774"/>
   </g>
-  <text x="600" y="560" text-anchor="middle" fill="#ffffff" font-size="84" font-family="Segoe UI, Arial, sans-serif" font-weight="700">OPENCLAW AI</text>
-  <text x="600" y="610" text-anchor="middle" fill="#9fb4d1" font-size="30" font-family="Segoe UI, Arial, sans-serif">AI-Native Web3 Utility Token</text>
+
+  <text x="600" y="564" text-anchor="middle" fill="#ffffff" font-size="82" font-family="Segoe UI, Arial, sans-serif" font-weight="700">马到成功币</text>
+  <text x="600" y="614" text-anchor="middle" fill="#b8c8df" font-size="30" font-family="Segoe UI, Arial, sans-serif">Horse Theme Token Cover</text>
 </svg>
