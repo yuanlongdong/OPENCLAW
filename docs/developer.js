@@ -10,6 +10,7 @@ const NETWORK_NAME = window.OPENCLAW_CHAIN_NAME || 'BSC Testnet';
 const CHAIN_RPC_URL = window.OPENCLAW_RPC_URL || 'https://bsc-testnet-rpc.publicnode.com';
 const EXPLORER_BASE = window.OPENCLAW_EXPLORER || 'https://testnet.bscscan.com';
 const NATIVE_SYMBOL = window.OPENCLAW_NATIVE_SYMBOL || 'tBNB';
+const TOKEN_SYMBOL = window.OPENCLAW_SYMBOL || '马到成功';
 const OWNER_ADDRESS = window.OPENCLAW_OWNER || '';
 const HISTORY_KEY = 'openclaw_transfer_history_v1';
 
@@ -84,12 +85,12 @@ async function refreshIssuerStats() {
     const c = new ethers.Contract(window.OPENCLAW_ADDRESS, abi, p);
     const totalBn = await c.totalSupply();
     const total = Number(ethers.formatUnits(totalBn, TOKEN_DECIMALS));
-    setText('statTotal', `${total.toLocaleString()} OCL`, 'mono');
+    setText('statTotal', `${total.toLocaleString()} ${TOKEN_SYMBOL}`, 'mono');
     if (ethers.isAddress(OWNER_ADDRESS)) {
       const ownerBn = await c.balanceOf(OWNER_ADDRESS);
       const owner = Number(ethers.formatUnits(ownerBn, TOKEN_DECIMALS));
       const pct = total > 0 ? (owner / total) * 100 : 0;
-      setText('statOwner', `${owner.toLocaleString()} OCL`, 'mono');
+      setText('statOwner', `${owner.toLocaleString()} ${TOKEN_SYMBOL}`, 'mono');
       setText('statOwnerPct', `${pct.toFixed(4)}%`, 'mono');
     } else {
       setText('statOwner', '未配置 OPENCLAW_OWNER', 'muted');
@@ -131,18 +132,18 @@ function renderHistory() {
     const li = document.createElement('li');
     li.textContent = '暂无转账记录';
     ul.appendChild(li);
-    setText('historyTotal', '0 OCL', 'mono');
+    setText('historyTotal', `0 ${TOKEN_SYMBOL}`, 'mono');
     return;
   }
   for (const r of transferHistory) {
     const li = document.createElement('li');
     const ts = new Date(r.time).toLocaleString();
-    li.innerHTML = `<span class="mono">${shortAddr(r.from)} -> ${shortAddr(r.to)}</span> | ${r.amount} OCL | <a class="mono" href="${EXPLORER_BASE}/tx/${r.hash}" target="_blank" rel="noopener noreferrer">${r.hash.slice(0, 10)}...</a> | ${ts}`;
+    li.innerHTML = `<span class="mono">${shortAddr(r.from)} -> ${shortAddr(r.to)}</span> | ${r.amount} ${TOKEN_SYMBOL} | <a class="mono" href="${EXPLORER_BASE}/tx/${r.hash}" target="_blank" rel="noopener noreferrer">${r.hash.slice(0, 10)}...</a> | ${ts}`;
     ul.appendChild(li);
     const n = Number(r.amount || 0);
     if (Number.isFinite(n) && n > 0) total += n;
   }
-  setText('historyTotal', `${total} OCL`, 'mono');
+  setText('historyTotal', `${total} ${TOKEN_SYMBOL}`, 'mono');
 }
 
 function parseBulkRows(text) {
@@ -227,7 +228,7 @@ async function ensureTokenContractReady() {
   const net = await provider.getNetwork();
   if (net.chainId !== REQUIRED_CHAIN_ID) throw new Error(`当前不是 ${NETWORK_NAME}，请先切换网络`);
   const code = await provider.getCode(window.OPENCLAW_ADDRESS);
-  if (!code || code === '0x') throw new Error(`该网络上未找到 OCL 合约，请确认钱包网络为 ${NETWORK_NAME}`);
+  if (!code || code === '0x') throw new Error(`该网络上未找到 ${TOKEN_SYMBOL} 合约，请确认钱包网络为 ${NETWORK_NAME}`);
 }
 
 
@@ -247,9 +248,9 @@ document.getElementById('addToken').onclick = async () => {
     if (!window.ethereum) throw new Error('未找到钱包环境');
     const ok = await window.ethereum.request({
       method: 'wallet_watchAsset',
-      params: { type: 'ERC20', options: { address: window.OPENCLAW_ADDRESS, symbol: 'OCL', decimals: 18 } }
+      params: { type: 'ERC20', options: { address: window.OPENCLAW_ADDRESS, symbol: TOKEN_SYMBOL, decimals: 18 } }
     });
-    setText('status', ok ? '已请求添加 OCL，请在钱包确认' : '钱包未添加 OCL（用户取消或钱包不支持）', ok ? 'ok' : 'bad');
+    setText('status', ok ? `已请求添加 ${TOKEN_SYMBOL}，请在钱包确认` : `钱包未添加 ${TOKEN_SYMBOL}（用户取消或钱包不支持）`, ok ? 'ok' : 'bad');
   } catch (e) {
     setText('status', e.message || '添加代币失败', 'bad');
   }
@@ -261,7 +262,7 @@ document.getElementById('balance').onclick = async () => {
     await ensureTokenContractReady();
     const c = getContract(true);
     const b = await c.balanceOf(account);
-    setText('balanceOut', `${ethers.formatUnits(b, TOKEN_DECIMALS)} OCL`, 'mono');
+    setText('balanceOut', `${ethers.formatUnits(b, TOKEN_DECIMALS)} ${TOKEN_SYMBOL}`, 'mono');
     await refreshNativeBalance();
     await refreshIssuerStats();
   } catch (e) {
@@ -294,7 +295,7 @@ document.getElementById('bulkPreview').onclick = () => {
   try {
     const parsed = parseBulkRows(document.getElementById('bulkInput').value);
     const total = parsed.reduce((s, x) => s + Number(x.amount), 0);
-    setText('status', `空投预览: ${parsed.length} 笔, 合计 ${total} OCL`, 'ok');
+    setText('status', `空投预览: ${parsed.length} 笔, 合计 ${total} ${TOKEN_SYMBOL}`, 'ok');
   } catch (e) {
     setText('status', e.message || '预览失败', 'bad');
   }
@@ -310,7 +311,7 @@ document.getElementById('bulkSend').onclick = async () => {
     const c = getContract(false);
     for (let i = 0; i < parsed.length; i++) {
       const row = parsed[i];
-      setText('status', `发送中 ${i + 1}/${parsed.length}: ${shortAddr(row.to)} ${row.amount} OCL`, 'muted');
+      setText('status', `发送中 ${i + 1}/${parsed.length}: ${shortAddr(row.to)} ${row.amount} ${TOKEN_SYMBOL}`, 'muted');
       const tx = await c.transfer(row.to, ethers.parseUnits(row.amount, TOKEN_DECIMALS));
       await tx.wait();
       addHistoryItem({ from: account, to: row.to, amount: row.amount, hash: tx.hash, time: Date.now() });
