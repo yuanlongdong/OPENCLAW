@@ -24,7 +24,7 @@ const NETWORK_NAME = window.OPENCLAW_CHAIN_NAME || 'BSC Testnet';
 const CHAIN_RPC_URL = window.OPENCLAW_RPC_URL || 'https://bsc-testnet-rpc.publicnode.com';
 const EXPLORER_BASE = window.OPENCLAW_EXPLORER || 'https://testnet.bscscan.com';
 const NATIVE_SYMBOL = window.OPENCLAW_NATIVE_SYMBOL || 'tBNB';
-const TOKEN_SYMBOL = window.OPENCLAW_SYMBOL || '马到成功';
+const TOKEN_SYMBOL = window.OPENCLAW_SYMBOL || 'INSUR';
 let provider, signer, account;
 let staticProvider;
 function setText(id, val, cls) { const el = document.getElementById(id); if (!el) return; el.textContent = val; if (cls) el.className = cls; }

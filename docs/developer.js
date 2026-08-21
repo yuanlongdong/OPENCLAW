@@ -20,7 +20,6 @@ const abi = [
   // Rescue
   'function withdrawStuckBNB()',
 ];
-
 const TOKEN_DECIMALS = 18;
 const REQUIRED_CHAIN_ID = BigInt(window.OPENCLAW_CHAIN_ID || 97);
 const REQUIRED_CHAIN_HEX = `0x${REQUIRED_CHAIN_ID.toString(16)}`;
@@ -28,39 +27,33 @@ const NETWORK_NAME = window.OPENCLAW_CHAIN_NAME || 'BSC Testnet';
 const CHAIN_RPC_URL = window.OPENCLAW_RPC_URL || 'https://bsc-testnet-rpc.publicnode.com';
 const EXPLORER_BASE = window.OPENCLAW_EXPLORER || 'https://testnet.bscscan.com';
 const NATIVE_SYMBOL = window.OPENCLAW_NATIVE_SYMBOL || 'tBNB';
-const TOKEN_SYMBOL = window.OPENCLAW_SYMBOL || '马到成功';
+const TOKEN_SYMBOL = window.OPENCLAW_SYMBOL || 'INSUR';
 const OWNER_ADDRESS = window.OPENCLAW_OWNER || '';
 const HISTORY_KEY = 'openclaw_transfer_history_v1';
-
 document.getElementById('networkLabel').textContent = NETWORK_NAME;
 document.getElementById('chainIdLabel').textContent = REQUIRED_CHAIN_ID.toString();
 document.getElementById('nativeLabel').textContent = `${NATIVE_SYMBOL} 余额:`;
 const contractLinkEl = document.getElementById('contractLink');
 contractLinkEl.textContent = window.OPENCLAW_ADDRESS;
 contractLinkEl.href = `${EXPLORER_BASE}/token/${window.OPENCLAW_ADDRESS}`;
-
 let provider, signer, account;
 let staticProvider;
 let transferHistory = [];
-
 function setText(id, val, cls = 'muted') {
   const el = document.getElementById(id);
   if (!el) return;
   el.textContent = val;
   el.className = cls;
 }
-
 function shortAddr(addr) {
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 }
-
 function ensureOwner() {
   if (!account || !ethers.isAddress(OWNER_ADDRESS)) return;
   if (ethers.getAddress(account) !== ethers.getAddress(OWNER_ADDRESS)) {
     throw new Error('当前钱包不是开发者地址，禁止执行写操作');
   }
 }
-
 function updateOwnerHint() {
   if (!account) {
     setText('ownerHint', '未连接钱包', 'muted');
@@ -73,18 +66,15 @@ function updateOwnerHint() {
   const ok = ethers.getAddress(account) === ethers.getAddress(OWNER_ADDRESS);
   setText('ownerHint', ok ? `开发者已验证: ${shortAddr(account)}` : `当前钱包 ${shortAddr(account)} 非开发者地址`, ok ? 'ok' : 'bad');
 }
-
 async function refreshNativeBalance() {
   if (!provider || !account) return;
   const wei = await provider.getBalance(account);
   setText('nativeOut', `${ethers.formatUnits(wei, 18)} ${NATIVE_SYMBOL}`, 'mono');
 }
-
 function getStaticProvider() {
   if (!staticProvider) staticProvider = new ethers.JsonRpcProvider(CHAIN_RPC_URL);
   return staticProvider;
 }
-
 async function fetchHolderCount() {
   const key = String(window.BSCSCAN_API_KEY || '').trim();
   if (!key) return null;
@@ -97,7 +87,6 @@ async function fetchHolderCount() {
   const n = Number(data.result);
   return Number.isFinite(n) ? n : null;
 }
-
 async function refreshIssuerStats() {
   try {
     const p = getStaticProvider();
@@ -122,7 +111,6 @@ async function refreshIssuerStats() {
     setText('statsStatus', e.message || '发行看板刷新失败', 'bad');
   }
 }
-
 async function refreshContractParams() {
   try {
     const p = getStaticProvider();
@@ -150,7 +138,6 @@ async function refreshContractParams() {
     setText('paramsStatus', e.message || '合约参数刷新失败', 'bad');
   }
 }
-
 function loadHistory() {
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
@@ -159,18 +146,15 @@ function loadHistory() {
     transferHistory = [];
   }
 }
-
 function saveHistory() {
   localStorage.setItem(HISTORY_KEY, JSON.stringify(transferHistory.slice(0, 100)));
 }
-
 function addHistoryItem(item) {
   transferHistory.unshift(item);
   transferHistory = transferHistory.slice(0, 100);
   saveHistory();
   renderHistory();
 }
-
 function renderHistory() {
   const ul = document.getElementById('historyList');
   let total = 0;
@@ -192,7 +176,6 @@ function renderHistory() {
   }
   setText('historyTotal', `${total} ${TOKEN_SYMBOL}`, 'mono');
 }
-
 function parseBulkRows(text) {
   const normalized = String(text || '')
     .replace(/[，]/g, ',')
@@ -228,7 +211,6 @@ function parseBulkRows(text) {
   if (parsed.length > 100) throw new Error('单次最多 100 行，避免超时');
   return parsed;
 }
-
 async function connect() {
   if (!window.ethereum) throw new Error('未找到 MetaMask，请在钱包内置浏览器打开');
   provider = new ethers.BrowserProvider(window.ethereum, 'any');
@@ -240,12 +222,10 @@ async function connect() {
   document.getElementById('account').textContent = account;
   updateOwnerHint();
 }
-
 function getContract(readonly = false) {
   if (!provider) provider = new ethers.BrowserProvider(window.ethereum);
   return new ethers.Contract(window.OPENCLAW_ADDRESS, abi, readonly ? provider : signer);
 }
-
 async function ensureRequiredNetwork() {
   const net = await provider.getNetwork();
   if (net.chainId === REQUIRED_CHAIN_ID) return;
@@ -269,7 +249,6 @@ async function ensureRequiredNetwork() {
     throw new Error(`请切换到 ${NETWORK_NAME} (chainId ${REQUIRED_CHAIN_ID.toString()}) 后重试`);
   }
 }
-
 async function ensureTokenContractReady() {
   if (!provider) provider = new ethers.BrowserProvider(window.ethereum);
   const net = await provider.getNetwork();
@@ -277,7 +256,6 @@ async function ensureTokenContractReady() {
   const code = await provider.getCode(window.OPENCLAW_ADDRESS);
   if (!code || code === '0x') throw new Error(`该网络上未找到 ${TOKEN_SYMBOL} 合约，请确认钱包网络为 ${NETWORK_NAME}`);
 }
-
 async function waitForTx(tx, statusId) {
   setText(statusId, `交易已提交: ${tx.hash}`, 'muted');
   const receipt = await tx.wait();
@@ -288,7 +266,6 @@ async function waitForTx(tx, statusId) {
   }
   return receipt;
 }
-
 // === Wallet & basic actions ===
 document.getElementById('connect').onclick = async () => {
   try {
@@ -301,7 +278,6 @@ document.getElementById('connect').onclick = async () => {
     setText('status', e.message || '连接失败', 'bad');
   }
 };
-
 document.getElementById('addToken').onclick = async () => {
   try {
     if (!window.ethereum) throw new Error('未找到钱包环境');
@@ -314,7 +290,6 @@ document.getElementById('addToken').onclick = async () => {
     setText('status', e.message || '添加代币失败', 'bad');
   }
 };
-
 document.getElementById('balance').onclick = async () => {
   try {
     if (!account) await connect();
@@ -328,7 +303,6 @@ document.getElementById('balance').onclick = async () => {
     setText('status', e.message || '查询失败', 'bad');
   }
 };
-
 document.getElementById('send').onclick = async () => {
   try {
     if (!account) await connect();
@@ -347,7 +321,6 @@ document.getElementById('send').onclick = async () => {
     setText('status', e.message || '转账失败', 'bad');
   }
 };
-
 document.getElementById('bulkPreview').onclick = () => {
   try {
     const parsed = parseBulkRows(document.getElementById('bulkInput').value);
@@ -357,7 +330,6 @@ document.getElementById('bulkPreview').onclick = () => {
     setText('status', e.message || '预览失败', 'bad');
   }
 };
-
 document.getElementById('bulkSend').onclick = async () => {
   try {
     if (!account) await connect();
@@ -379,28 +351,23 @@ document.getElementById('bulkSend').onclick = async () => {
     setText('status', e.message || '空投失败', 'bad');
   }
 };
-
 document.getElementById('refreshStats').onclick = async () => {
   await refreshIssuerStats();
 };
-
 document.getElementById('refreshContractParams').onclick = async () => {
   await refreshContractParams();
 };
-
 document.getElementById('refreshHistory').onclick = () => {
   loadHistory();
   renderHistory();
   setText('status', '已刷新本地历史', 'ok');
 };
-
 document.getElementById('clearHistory').onclick = () => {
   transferHistory = [];
   saveHistory();
   renderHistory();
   setText('status', '已清空本地历史', 'ok');
 };
-
 // === Admin: Taxes ===
 document.getElementById('setTaxes').onclick = async () => {
   try {
@@ -419,7 +386,6 @@ document.getElementById('setTaxes').onclick = async () => {
     setText('paramsStatus', e.message || '设置税率失败', 'bad');
   }
 };
-
 // === Admin: Treasury ===
 document.getElementById('setTreasury').onclick = async () => {
   try {
@@ -436,7 +402,6 @@ document.getElementById('setTreasury').onclick = async () => {
     setText('paramsStatus', e.message || '设置国库失败', 'bad');
   }
 };
-
 // === Admin: Fee exemption ===
 document.getElementById('addExempt').onclick = async () => {
   try {
@@ -453,7 +418,6 @@ document.getElementById('addExempt').onclick = async () => {
     setText('exemptStatus', e.message || '操作失败', 'bad');
   }
 };
-
 document.getElementById('removeExempt').onclick = async () => {
   try {
     if (!account) await connect();
@@ -469,7 +433,6 @@ document.getElementById('removeExempt').onclick = async () => {
     setText('exemptStatus', e.message || '操作失败', 'bad');
   }
 };
-
 document.getElementById('checkExempt').onclick = async () => {
   try {
     const addr = document.getElementById('exemptAddress').value.trim();
@@ -482,7 +445,6 @@ document.getElementById('checkExempt').onclick = async () => {
     setText('exemptStatus', e.message || '查询失败', 'bad');
   }
 };
-
 // === Admin: Slippage ===
 document.getElementById('setSlippage').onclick = async () => {
   try {
@@ -499,7 +461,6 @@ document.getElementById('setSlippage').onclick = async () => {
     setText('paramsStatus', e.message || '设置滑点失败（旧版合约可能不支持此函数）', 'bad');
   }
 };
-
 // === Admin: Withdraw stuck BNB ===
 document.getElementById('withdrawBNB').onclick = async () => {
   try {
@@ -514,7 +475,6 @@ document.getElementById('withdrawBNB').onclick = async () => {
     setText('paramsStatus', e.message || '提取失败（旧版合约可能不支持此函数）', 'bad');
   }
 };
-
 // === Init ===
 (async () => {
   loadHistory();
