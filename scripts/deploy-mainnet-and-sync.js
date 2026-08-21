@@ -15,7 +15,6 @@ async function main() {
   if (net.chainId !== 56n) {
     throw new Error(`当前网络不是 BSC Mainnet (56)，实际为 ${net.chainId.toString()}`);
   }
-
   console.log('Network:', net.name, 'chainId:', net.chainId.toString());
   console.log('Deployer:', deployer.address);
 
@@ -45,9 +44,8 @@ async function main() {
   await token.waitForDeployment();
   const address = await token.getAddress();
   const tx = token.deploymentTransaction();
-
   console.log('');
-  console.log('✅ OPENCLAW deployed to:', address);
+  console.log('✅ InsurFi deployed to:', address);
   if (tx) console.log('   Deploy tx hash:', tx.hash);
 
   // Sync frontend config
@@ -57,7 +55,7 @@ async function main() {
     /const MAINNET = \{[\s\S]*?\};/,
     `const MAINNET = {\n` +
       `    OPENCLAW_ADDRESS: '${address}',\n` +
-      `    OPENCLAW_SYMBOL: '马到成功',\n` +
+      `    OPENCLAW_SYMBOL: 'INSUR',\n` +
       `    OPENCLAW_CHAIN_ID: 56,\n` +
       `    OPENCLAW_CHAIN_NAME: 'BNB Smart Chain',\n` +
       `    OPENCLAW_RPC_URL: 'https://bsc-dataseed.binance.org',\n` +
@@ -69,7 +67,6 @@ async function main() {
   );
   fs.writeFileSync(cfgPath, cfg);
   console.log('✅ Synced docs/config.js MAINNET address + owner.');
-
   console.log('');
   console.log('Next steps:');
   console.log(`  1) export CONTRACT_ADDRESS=${address}`);

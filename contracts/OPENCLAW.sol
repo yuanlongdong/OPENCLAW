@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
-
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
-
 interface IUniswapV2Factory {
     function createPair(address tokenA, address tokenB) external returns (address pair);
 }
-
 interface IUniswapV2Router02 {
     function factory() external pure returns (address);
     function WETH() external pure returns (address);
@@ -20,7 +17,6 @@ interface IUniswapV2Router02 {
         uint256 deadline
     ) external;
 }
-
 contract OPENCLAW is ERC20, Ownable {
     uint256 public constant MAX_TAX_BPS = 1000;
     uint256 public constant MAX_SWAP_SLIPPAGE_BPS = 2000;
@@ -28,16 +24,12 @@ contract OPENCLAW is ERC20, Ownable {
     uint256 public sellTaxBps;
     uint256 public swapTokensAtAmount;
     uint256 public swapSlippageToleranceBps;
-
     address public treasury;
     IUniswapV2Router02 public immutable router;
     address public immutable pair;
-
     mapping(address => bool) public isExcludedFromFee;
     mapping(address => bool) public automatedMarketMakerPairs;
-
     bool private inSwap;
-
     uint256 public insurancePool;
     uint256 public insuranceShareBps;
     uint256 public minHoldForInsurance;
@@ -46,9 +38,7 @@ contract OPENCLAW is ERC20, Ownable {
     uint256 public payoutRatioBps;
     uint256 public maxPayoutPerClaim;
     uint256 public claimCooldown;
-
     enum ClaimStatus { Pending, Approved, Rejected, Paid }
-
     struct Policy {
         address holder;
         uint256 startTime;
@@ -56,7 +46,6 @@ contract OPENCLAW is ERC20, Ownable {
         uint256 totalPayout;
         uint256 lastClaimTime;
     }
-
     struct Claim {
         uint256 id;
         address claimant;
@@ -68,12 +57,10 @@ contract OPENCLAW is ERC20, Ownable {
         address reviewer;
         string rejectReason;
     }
-
     uint256 public totalClaims;
     mapping(address => Policy) public policies;
     mapping(uint256 => Claim) public claims;
     mapping(bytes32 => bool) public usedTxHashes;
-
     event TaxesUpdated(uint256 buyTaxBps, uint256 sellTaxBps);
     event TreasuryUpdated(address indexed treasury);
     event ExcludedFromFee(address indexed account, bool isExcluded);
@@ -88,30 +75,26 @@ contract OPENCLAW is ERC20, Ownable {
     event ClaimPaid(uint256 indexed claimId, address indexed claimant, uint256 amount);
     event InsurancePoolFunded(uint256 amount);
     event InsuranceParamsUpdated();
-
     modifier lockSwap() {
         inSwap = true;
         _;
         inSwap = false;
     }
-
     constructor(
         address routerAddress,
         address treasuryAddress,
         uint256 initialBuyTaxBps,
         uint256 initialSellTaxBps
-    ) ERC20('POWER', unicode'马到成功') Ownable(msg.sender) {
+    ) ERC20('InsurFi', 'INSUR') Ownable(msg.sender) {
         require(routerAddress != address(0), 'router=0');
         require(treasuryAddress != address(0), 'treasury=0');
         require(initialBuyTaxBps <= MAX_TAX_BPS, 'buy tax too high');
         require(initialSellTaxBps <= MAX_TAX_BPS, 'sell tax too high');
-
         router = IUniswapV2Router02(routerAddress);
         treasury = treasuryAddress;
         buyTaxBps = initialBuyTaxBps;
         sellTaxBps = initialSellTaxBps;
         swapSlippageToleranceBps = 1000;
-
         insuranceShareBps = 7000;
         minHoldForInsurance = 10_000 * 10 ** decimals();
         waitingPeriod = 7 days;
@@ -119,22 +102,17 @@ contract OPENCLAW is ERC20, Ownable {
         payoutRatioBps = 3000;
         maxPayoutPerClaim = 0.5 ether;
         claimCooldown = 30 days;
-
         address createdPair = IUniswapV2Factory(router.factory()).createPair(address(this), router.WETH());
         pair = createdPair;
         automatedMarketMakerPairs[createdPair] = true;
-
         isExcludedFromFee[msg.sender] = true;
         isExcludedFromFee[address(this)] = true;
         isExcludedFromFee[treasuryAddress] = true;
-
         uint256 totalSupplyAmount = 1_000_000_000 * 10 ** decimals();
         swapTokensAtAmount = totalSupplyAmount / 10_000;
         _mint(msg.sender, totalSupplyAmount);
     }
-
     receive() external payable {}
-
     function setTaxes(uint256 newBuyTaxBps, uint256 newSellTaxBps) external onlyOwner {
         require(newBuyTaxBps <= MAX_TAX_BPS, 'buy tax too high');
         require(newSellTaxBps <= MAX_TAX_BPS, 'sell tax too high');
@@ -142,43 +120,36 @@ contract OPENCLAW is ERC20, Ownable {
         sellTaxBps = newSellTaxBps;
         emit TaxesUpdated(newBuyTaxBps, newSellTaxBps);
     }
-
     function setTreasury(address newTreasury) external onlyOwner {
         require(newTreasury != address(0), 'treasury=0');
         treasury = newTreasury;
         emit TreasuryUpdated(newTreasury);
     }
-
     function setExcludedFromFee(address account, bool excluded) external onlyOwner {
         isExcludedFromFee[account] = excluded;
         emit ExcludedFromFee(account, excluded);
     }
-
     function setAutomatedMarketMakerPair(address ammPair, bool isAMM) external onlyOwner {
         require(ammPair != pair, 'cannot remove default pair');
         automatedMarketMakerPairs[ammPair] = isAMM;
         emit AMMPairUpdated(ammPair, isAMM);
     }
-
     function setSwapTokensAtAmount(uint256 amount) external onlyOwner {
         require(amount > 0, 'amount=0');
         swapTokensAtAmount = amount;
     }
-
     function setSwapSlippageTolerance(uint256 newSlippageBps) external onlyOwner {
         require(newSlippageBps <= MAX_SWAP_SLIPPAGE_BPS, 'slippage too high');
         require(newSlippageBps > 0, 'slippage=0');
         swapSlippageToleranceBps = newSlippageBps;
         emit SwapSlippageUpdated(newSlippageBps);
     }
-
     function withdrawStuckBNB() external onlyOwner {
         uint256 balance = address(this).balance - insurancePool;
         require(balance > 0, 'no BNB to withdraw');
         payable(treasury).transfer(balance);
         emit StuckBNBWithdrawn(balance);
     }
-
     function setInsuranceParams(
         uint256 newInsuranceShareBps,
         uint256 newMinHold,
@@ -199,13 +170,11 @@ contract OPENCLAW is ERC20, Ownable {
         claimCooldown = newCooldown;
         emit InsuranceParamsUpdated();
     }
-
     function fundInsurancePool() external payable onlyOwner {
         require(msg.value > 0, 'amount=0');
         insurancePool += msg.value;
         emit InsurancePoolFunded(msg.value);
     }
-
     function purchaseInsurance() external {
         require(balanceOf(msg.sender) >= minHoldForInsurance, '持仓不足，无法投保');
         Policy storage p = policies[msg.sender];
@@ -218,7 +187,6 @@ contract OPENCLAW is ERC20, Ownable {
             emit InsurancePurchased(msg.sender, p.startTime);
         }
     }
-
     function isInsured(address account) public view returns (bool) {
         Policy storage p = policies[account];
         if (!p.active) return false;
@@ -226,17 +194,14 @@ contract OPENCLAW is ERC20, Ownable {
         if (block.timestamp < p.startTime) return false;
         return true;
     }
-
     function submitClaim(bytes32 txHash, uint256 claimedLoss) external {
         require(isInsured(msg.sender), '未投保或保单未生效');
         require(!usedTxHashes[txHash], '该交易已申请过赔付');
         require(claimedLoss > 0, '亏损额不能为0');
-
         Policy storage p = policies[msg.sender];
         if (p.lastClaimTime > 0) {
             require(block.timestamp >= p.lastClaimTime + claimCooldown, '赔付冷却期内，请稍后再试');
         }
-
         uint256 claimId = totalClaims++;
         claims[claimId] = Claim({
             id: claimId,
@@ -252,7 +217,6 @@ contract OPENCLAW is ERC20, Ownable {
         usedTxHashes[txHash] = true;
         emit ClaimSubmitted(claimId, msg.sender, txHash, claimedLoss);
     }
-
     function approveClaim(uint256 claimId, uint256 payoutAmount) external onlyOwner {
         Claim storage c = claims[claimId];
         require(c.status == ClaimStatus.Pending, '申请状态不正确');
@@ -263,7 +227,6 @@ contract OPENCLAW is ERC20, Ownable {
         c.reviewer = msg.sender;
         emit ClaimApproved(claimId, msg.sender, payoutAmount);
     }
-
     function rejectClaim(uint256 claimId, string calldata reason) external onlyOwner {
         Claim storage c = claims[claimId];
         require(c.status == ClaimStatus.Pending, '申请状态不正确');
@@ -273,7 +236,6 @@ contract OPENCLAW is ERC20, Ownable {
         usedTxHashes[c.txHash] = false;
         emit ClaimRejected(claimId, msg.sender, reason);
     }
-
     function payoutClaim(uint256 claimId) external onlyOwner {
         Claim storage c = claims[claimId];
         require(c.status == ClaimStatus.Approved, '申请未通过审核');
@@ -286,28 +248,24 @@ contract OPENCLAW is ERC20, Ownable {
         payable(c.claimant).transfer(c.payoutAmount);
         emit ClaimPaid(claimId, c.claimant, c.payoutAmount);
     }
-
     function calculatePayout(uint256 lossAmount) external view returns (uint256) {
         uint256 payout = (lossAmount * payoutRatioBps) / 10_000;
         if (payout > maxPayoutPerClaim) payout = maxPayoutPerClaim;
         if (payout > insurancePool) payout = insurancePool;
         return payout;
     }
-
     function getPolicy(address account) external view returns (
         address holder, uint256 startTime, bool active, uint256 totalPayout, uint256 lastClaimTime, bool currentlyInsured
     ) {
         Policy storage p = policies[account];
         return (p.holder, p.startTime, p.active, p.totalPayout, p.lastClaimTime, isInsured(account));
     }
-
     function getClaim(uint256 claimId) external view returns (
         address claimant, bytes32 txHash, uint256 claimedLoss, uint256 payoutAmount, uint256 submitTime, ClaimStatus status, address reviewer, string memory rejectReason
     ) {
         Claim storage c = claims[claimId];
         return (c.claimant, c.txHash, c.claimedLoss, c.payoutAmount, c.submitTime, c.status, c.reviewer, c.rejectReason);
     }
-
     function _update(address from, address to, uint256 amount) internal override {
         if (amount == 0) { super._update(from, to, 0); return; }
         if (from == address(0) || to == address(0) || isExcludedFromFee[from] || isExcludedFromFee[to]) {
@@ -330,7 +288,6 @@ contract OPENCLAW is ERC20, Ownable {
         }
         super._update(from, to, amount);
     }
-
     function _getMinOutput(uint256 tokenAmount) private view returns (uint256) {
         address[] memory path = new address[](2);
         path[0] = address(this); path[1] = router.WETH();
@@ -338,7 +295,6 @@ contract OPENCLAW is ERC20, Ownable {
             return (amounts[1] * (10_000 - swapSlippageToleranceBps)) / 10_000;
         } catch { return 0; }
     }
-
     function _swapAndSendToTreasury(uint256 tokenAmount) private lockSwap {
         if (tokenAmount == 0 || treasury == address(0)) return;
         address[] memory path = new address[](2);
