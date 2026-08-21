@@ -105,7 +105,67 @@
         <div class="kv"><b>单次上限</b><span>0.5 BNB</span></div>
         <div class="kv"><b>赔付冷却</b><span>30 天/次</span></div>
       </div>
-      <p class="muted" style="font-size:13px; margin-top:12px;">* 保障范围：PancakeSwap 现货交易。参数可由项目方根据保险池余额动态调整。</p>
+      <p class="muted" style="font-size:13px; margin-top:12px;">* 保障范围：PancakeSwap WBNB 交易对现货交易。参数可由项目方根据保险池余额动态调整。</p>
+    </section>
+    <section class="card">
+      <h2>💰 赔付示例（3个典型场景）</h2>
+      <p class="muted" style="margin-bottom:12px;">赔付额 = min(亏损额 × 30%, 0.5 BNB, 保险池余额)，三个值取最小。</p>
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr style="background:rgba(245,197,66,.1);">
+              <th style="border:1px solid var(--line); padding:10px; text-align:left; color:var(--gold);">场景</th>
+              <th style="border:1px solid var(--line); padding:10px; text-align:left; color:var(--gold);">买入支付</th>
+              <th style="border:1px solid var(--line); padding:10px; text-align:left; color:var(--gold);">卖出收回</th>
+              <th style="border:1px solid var(--line); padding:10px; text-align:left; color:var(--gold);">亏损额</th>
+              <th style="border:1px solid var(--line); padding:10px; text-align:left; color:var(--gold);">亏损比例</th>
+              <th style="border:1px solid var(--line); padding:10px; text-align:left; color:var(--gold);">实际赔付</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="border:1px solid var(--line); padding:10px;">小亏</td>
+              <td style="border:1px solid var(--line); padding:10px;">1.0 BNB</td>
+              <td style="border:1px solid var(--line); padding:10px;">0.7 BNB</td>
+              <td style="border:1px solid var(--line); padding:10px;">0.3 BNB</td>
+              <td style="border:1px solid var(--line); padding:10px; color:var(--green);">30% ✅</td>
+              <td style="border:1px solid var(--line); padding:10px; font-weight:700; color:var(--gold);">0.09 BNB</td>
+            </tr>
+            <tr style="background:rgba(0,0,0,.15);">
+              <td style="border:1px solid var(--line); padding:10px;">中亏</td>
+              <td style="border:1px solid var(--line); padding:10px;">2.0 BNB</td>
+              <td style="border:1px solid var(--line); padding:10px;">1.0 BNB</td>
+              <td style="border:1px solid var(--line); padding:10px;">1.0 BNB</td>
+              <td style="border:1px solid var(--line); padding:10px; color:var(--green);">50% ✅</td>
+              <td style="border:1px solid var(--line); padding:10px; font-weight:700; color:var(--gold);">0.3 BNB</td>
+            </tr>
+            <tr>
+              <td style="border:1px solid var(--line); padding:10px;">大亏封顶</td>
+              <td style="border:1px solid var(--line); padding:10px;">5.0 BNB</td>
+              <td style="border:1px solid var(--line); padding:10px;">2.0 BNB</td>
+              <td style="border:1px solid var(--line); padding:10px;">3.0 BNB</td>
+              <td style="border:1px solid var(--line); padding:10px; color:var(--green);">60% ✅</td>
+              <td style="border:1px solid var(--line); padding:10px; font-weight:700; color:var(--gold);">0.5 BNB <span class="muted" style="font-size:12px;">(封顶)</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted" style="font-size:13px; margin-top:10px;">* 以上为理想情况示例，实际赔付以保险池余额为准，池子不足时按比例缩减。</p>
+    </section>
+    <section class="card">
+      <h2>🚫 拒赔情形（9条，提前说清楚）</h2>
+      <p class="muted" style="margin-bottom:12px;">以下情况将被拒绝赔付，请投保前仔细阅读：</p>
+      <ol style="padding-left:24px; margin:0;">
+        <li style="margin:8px 0;"><b>非合格交易</b>：交易不是 PancakeSwap WBNB 交易对（如仅在 CEX 交易、或 USDT 交易对）</li>
+        <li style="margin:8px 0;"><b>亏损不足</b>：亏损比例不足 20%（正常波动不赔）</li>
+        <li style="margin:8px 0;"><b>交易对不匹配</b>：买入和卖出不是同一交易对（如买的是 A 币，卖的是 B 币）</li>
+        <li style="margin:8px 0;"><b>等待期内</b>：交易发生在 7 天等待期内（防止先亏后买的逆向选择）</li>
+        <li style="margin:8px 0;"><b>冷却期内</b>：距上次赔付不足 30 天</li>
+        <li style="margin:8px 0;"><b>持仓不足</b>：提交申请时持仓不足 10,000 InsurFi（保单已暂停）</li>
+        <li style="margin:8px 0;"><b>哈希已用</b>：交易哈希已被使用过（重复赔付）</li>
+        <li style="margin:8px 0;"><b>无法验证</b>：链上查不到对应交易，无法验证交易真实性</li>
+        <li style="margin:8px 0;"><b>池子为空</b>：保险池余额为 0（等下一轮税收注入后可再申请）</li>
+      </ol>
     </section>
     <section class="card">
       <h2>✨ 为什么选择我们</h2>
