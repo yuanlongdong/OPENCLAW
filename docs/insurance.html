@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>马到成功 · 交易亏损险</title>
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#070d18; --txt:#eaf1ff; --muted:#a6b6d1; --line:#334768; --gold:#f5c542; --green:#4ade80; --red:#f87171; --blue:#60a5fa; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Satoshi,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--txt); overflow-x:hidden; }
+    .stars,.nebula{ position:fixed; inset:0; pointer-events:none; }
+    .stars{ background-image: radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,.82), transparent 70%), radial-gradient(1.4px 1.4px at 33% 70%, rgba(255,255,255,.58), transparent 70%), radial-gradient(1.6px 1.6px at 84% 28%, rgba(255,255,255,.62), transparent 70%), radial-gradient(1.1px 1.1px at 65% 56%, rgba(255,255,255,.56), transparent 70%); opacity:.45; animation:twinkle 9s ease-in-out infinite alternate; }
+    .nebula{ background: radial-gradient(36% 45% at 15% 10%, rgba(245,197,66,.18), transparent 70%), radial-gradient(25% 33% at 82% 22%, rgba(96,165,250,.15), transparent 75%), radial-gradient(30% 40% at 55% 75%, rgba(74,222,128,.10), transparent 75%); filter:blur(8px); animation:drift 24s ease-in-out infinite alternate; }
+    .wrap { min-height:100vh; max-width:960px; margin:0 auto; padding:20px; position:relative; z-index:2; }
+    .card { border:1px solid var(--line); border-radius:16px; background:linear-gradient(180deg, rgba(21,33,56,.76), rgba(11,18,33,.8)); box-shadow:0 22px 60px rgba(0,0,0,.38); padding:24px; margin-bottom:20px; }
+    .hero { text-align:center; padding:40px 24px; }
+    .hero h1 { font-family:"Clash Display",Satoshi,sans-serif; font-size:clamp(36px,7vw,60px); margin:0 0 8px; line-height:1.1; background:linear-gradient(135deg, var(--gold), #fff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .hero p { margin:0; color:var(--muted); font-size:16px; line-height:1.7; }
+    .badge { display:inline-block; padding:4px 12px; border-radius:20px; background:rgba(245,197,66,.15); color:var(--gold); font-size:13px; font-weight:600; margin-bottom:16px; }
+    h2 { font-family:"Clash Display",Satoshi,sans-serif; font-size:24px; margin:0 0 16px; }
+    h3 { font-size:18px; margin:20px 0 12px; color:var(--gold); }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+    @media(max-width:600px){ .grid-2,.grid-3{grid-template-columns:1fr;} }
+    .kv { border:1px solid var(--line); border-radius:10px; padding:14px; background:rgba(0,0,0,.2); }
+    .kv b { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+    .kv span { font-size:18px; font-weight:700; }
+    .mono { font-family:ui-monospace,monospace; font-size:14px; word-break:break-all; }
+    .muted { color:var(--muted); }
+    .ok { color:var(--green); }
+    .bad { color:var(--red); }
+    .gold { color:var(--gold); }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:12px 0; }
+    .col { display:flex; flex-direction:column; gap:8px; margin:12px 0; }
+    input, textarea { flex:1; min-width:200px; padding:10px 14px; border-radius:8px; border:1px solid var(--line); background:rgba(0,0,0,.3); color:var(--txt); font-size:14px; font-family:inherit; }
+    input:focus, textarea:focus { outline:none; border-color:var(--gold); }
+    textarea { min-height:80px; resize:vertical; }
+    button { border:none; border-radius:10px; padding:10px 20px; cursor:pointer; background:linear-gradient(135deg, var(--gold), #e0a82e); color:#1a1a2e; font-weight:700; font-size:14px; transition:transform .15s, box-shadow .15s; }
+    button:hover { transform:translateY(-1px); box-shadow:0 8px 20px rgba(245,197,66,.3); }
+    button:active { transform:translateY(0); }
+    button.secondary { background:rgba(255,255,255,.1); color:var(--txt); }
+    button.secondary:hover { background:rgba(255,255,255,.18); box-shadow:none; }
+    button.warn { background:linear-gradient(135deg, var(--red), #dc2626); color:#fff; }
+    .status { font-size:14px; min-height:20px; margin:8px 0; }
+    .feature-list { list-style:none; padding:0; margin:0; }
+    .feature-list li { padding:10px 0; border-bottom:1px solid var(--line); display:flex; align-items:flex-start; gap:10px; }
+    .feature-list li:last-child { border-bottom:none; }
+    .feature-list .icon { font-size:20px; flex-shrink:0; }
+    .feature-list .text b { display:block; margin-bottom:2px; }
+    .feature-list .text span { color:var(--muted); font-size:14px; }
+    .pool-bar { height:24px; border-radius:12px; background:rgba(0,0,0,.3); overflow:hidden; margin:12px 0; }
+    .pool-fill { height:100%; background:linear-gradient(90deg, var(--green), var(--gold)); border-radius:12px; transition:width .5s; }
+    .steps { counter-reset:step; }
+    .step { counter-increment:step; padding:16px; border-left:3px solid var(--gold); margin-left:12px; position:relative; }
+    .step::before { content:counter(step); position:absolute; left:-15px; top:14px; width:24px; height:24px; border-radius:50%; background:var(--gold); color:#1a1a2e; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; }
+    .step b { display:block; margin-bottom:4px; }
+    .step span { color:var(--muted); font-size:14px; }
+    .nav { display:flex; gap:12px; justify-content:center; margin-bottom:20px; flex-wrap:wrap; }
+    .nav a { color:var(--muted); text-decoration:none; font-size:14px; padding:6px 12px; border-radius:8px; }
+    .nav a:hover { color:var(--gold); background:rgba(245,197,66,.1); }
+    @keyframes twinkle { from { opacity:.28; } to { opacity:.58; } }
+    @keyframes drift { from { transform: translateY(-10px) scale(1.03); } to { transform: translateY(12px) scale(1); } }
+  </style>
+</head>
+<body>
+  <div class="stars"></div>
+  <div class="nebula"></div>
+  <main class="wrap">
+    <div class="nav">
+      <a href="./index.html">首页</a>
+      <a href="./insurance.html" style="color:var(--gold);">亏损险</a>
+      <a href="./whitepaper.html">白皮书</a>
+      <a href="./developer.html">开发者控制台</a>
+    </div>
+    <section class="card hero">
+      <div class="badge">🛡️ BSC 首个交易者亏损保险</div>
+      <h1>马到成功·交易亏损险</h1>
+      <p>持币即投保，交易亏损可赔付。<br/>让每一次交易，都有兜底的勇气。</p>
+      <div class="row" style="justify-content:center; margin-top:20px;">
+        <button id="connectWallet">连接钱包</button>
+        <button id="buyToken" class="secondary">去 PancakeSwap 买入</button>
+      </div>
+      <p id="walletStatus" class="status muted"></p>
+    </section>
+    <section class="card">
+      <h2>📊 保险池实时状态</h2>
+      <div class="grid-3">
+        <div class="kv"><b>保险池余额</b><span id="poolBalance" class="gold">-</span></div>
+        <div class="kv"><b>累计赔付</b><span id="totalPayouts">-</span></div>
+        <div class="kv"><b>待审核申请</b><span id="pendingClaims">-</span></div>
+      </div>
+      <div class="pool-bar"><div class="pool-fill" id="poolFill" style="width:0%"></div></div>
+      <p class="muted" style="font-size:13px;">交易税的 70% 自动注入保险池，池子越满，赔付能力越强。</p>
+    </section>
+    <section class="card">
+      <h2>🎯 保险条款</h2>
+      <div class="grid-2">
+        <div class="kv"><b>投保门槛</b><span>≥ 10,000 POWER</span></div>
+        <div class="kv"><b>等待期</b><span>7 天</span></div>
+        <div class="kv"><b>免赔额</b><span>亏损 ≥ 20%</span></div>
+        <div class="kv"><b>赔付比例</b><span class="gold">亏损额 30%</span></div>
+        <div class="kv"><b>单次上限</b><span>0.5 BNB</span></div>
+        <div class="kv"><b>赔付冷却</b><span>30 天/次</span></div>
+      </div>
+      <p class="muted" style="font-size:13px; margin-top:12px;">* 保障范围：PancakeSwap 现货交易。参数可由项目方根据保险池余额动态调整。</p>
+    </section>
+    <section class="card">
+      <h2>✨ 为什么选择我们</h2>
+      <ul class="feature-list">
+        <li><div class="icon">🔒</div><div class="text"><b>链上透明</b><span>保险池余额、赔付记录全部上链，公开可查，无法篡改</span></div></li>
+        <li><div class="icon">⚡</div><div class="text"><b>持币即投保</b><span>无需额外缴费，持有 POWER 代币自动获得保险资格</span></div></li>
+        <li><div class="icon">💰</div><div class="text"><b>真实赔付</b><span>交易税收入持续注入保险池，审核通过后 BNB 直接到账</span></div></li>
+        <li><div class="icon">🛡️</div><div class="text"><b>风控严格</b><span>等待期+免赔额+冷却期+交易哈希验证，多重防撸羊毛机制</span></div></li>
+      </ul>
+    </section>
+    <section class="card" id="myPolicySection" style="display:none;">
+      <h2>📋 我的保单</h2>
+      <div class="grid-2">
+        <div class="kv"><b>保单状态</b><span id="policyStatus">-</span></div>
+        <div class="kv"><b>生效时间</b><span id="policyStartTime">-</span></div>
+        <div class="kv"><b>累计赔付</b><span id="policyTotalPayout">-</span></div>
+        <div class="kv"><b>上次赔付</b><span id="policyLastClaim">-</span></div>
+      </div>
+      <div class="row">
+        <button id="purchaseBtn">立即投保</button>
+        <button id="refreshPolicy" class="secondary">刷新保单</button>
+      </div>
+      <p id="policyStatusText" class="status muted"></p>
+    </section>
+    <section class="card" id="claimSection" style="display:none;">
+      <h2>📝 申请赔付</h2>
+      <div class="col">
+        <label class="muted">亏损交易哈希（TxHash）</label>
+        <input id="claimTxHash" placeholder="0x..." />
+        <label class="muted">申报亏损额（BNB）</label>
+        <input id="claimLoss" type="number" step="0.001" placeholder="例如：0.5" />
+        <label class="muted">预计赔付（自动计算）</label>
+        <input id="claimEstimate" readonly placeholder="连接钱包后自动计算" />
+      </div>
+      <div class="row">
+        <button id="submitClaim" class="warn">提交赔付申请</button>
+        <button id="calcEstimate" class="secondary">计算预估赔付</button>
+      </div>
+      <p id="claimStatus" class="status muted"></p>
+    </section>
+    <section class="card">
+      <h2>📖 投保与理赔流程</h2>
+      <div class="steps">
+        <div class="step"><b>买入 POWER 代币</b><span>在 PancakeSwap 买入至少 10,000 枚 POWER</span></div>
+        <div class="step"><b>点击投保</b><span>连接钱包后点击「立即投保」，系统验证持仓后生效</span></div>
+        <div class="step"><b>等待 7 天</b><span>等待期过后保单正式生效，期间交易亏损暂不可赔付</span></div>
+        <div class="step"><b>交易亏损后申请</b><span>单笔交易亏损超过 20% 时，提交交易哈希和亏损额申请赔付</span></div>
+        <div class="step"><b>审核通过后到账</b><span>项目方审核交易真实性后，BNB 直接发放到你的钱包</span></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>⚠️ 风险提示</h2>
+      <ul class="feature-list">
+        <li><div class="icon">📌</div><div class="text"><b>保险池有限</b><span>赔付能力取决于保险池余额，池子不足时赔付可能按比例缩减或延迟</span></div></li>
+        <li><div class="icon">📌</div><div class="text"><b>需人工审核</b><span>当前版本赔付申请需项目方人工审核，后续将升级为链上自动验证</span></div></li>
+        <li><div class="icon">📌</div><div class="text"><b>参数可调整</b><span>保险条款参数（免赔额、赔付比例等）可由项目方根据运营情况调整</span></div></li>
+        <li><div class="icon">📌</div><div class="text"><b>代币有波动</b><span>POWER 代币本身价格可能波动，投保门槛以代币数量计算而非法币价值</span></div></li>
+      </ul>
+    </section>
+    <section class="card" style="text-align:center;">
+      <h2>🚀 开始你的安全交易之旅</h2>
+      <p class="muted">马到成功，不是不亏，是亏了有人兜底。</p>
+      <div class="row" style="justify-content:center; margin-top:16px;">
+        <button id="connectWallet2">连接钱包开始</button>
+        <button id="viewContract" class="secondary">查看合约</button>
+      </div>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+  <script src="./config.js"></script>
+  <script src="./insurance.js"></script>
+</body>
+</html>
