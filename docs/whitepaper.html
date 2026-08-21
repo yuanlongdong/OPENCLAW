@@ -3,79 +3,259 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>POWER 白皮书</title>
+  <title>POWER 白皮书 - 马到成功·交易亏损险</title>
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
   <style>
-    :root { --bg:#0a1220; --card:#101a2d; --line:#27354d; --txt:#e9f0fb; --muted:#9bb0cc; --accent:#ff6c4a; }
-    body { margin:0; background:linear-gradient(180deg,#091223,#0a1220); color:var(--txt); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
-    .wrap { max-width:960px; margin:24px auto; padding:16px; display:grid; gap:14px; }
-    .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; }
-    h1,h2 { margin:0 0 10px 0; }
-    p,li { color:var(--muted); line-height:1.65; }
-    ul { margin:0; padding-left:18px; }
-    .cover { width:100%; border-radius:12px; border:1px solid var(--line); }
-    .tag { display:inline-block; margin:0 8px 8px 0; padding:4px 10px; border-radius:999px; background:#1d2a45; color:#c8d8ef; font-size:12px; }
-    a { color:#95bbff; text-decoration:none; }
+    :root { --bg:#070d18; --txt:#eaf1ff; --muted:#a6b6d1; --line:#334768; --gold:#f5c542; --green:#4ade80; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Satoshi,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--txt); line-height:1.8; }
+    .stars,.nebula{ position:fixed; inset:0; pointer-events:none; }
+    .stars{ background-image: radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,.82), transparent 70%), radial-gradient(1.4px 1.4px at 33% 70%, rgba(255,255,255,.58), transparent 70%); opacity:.35; }
+    .nebula{ background: radial-gradient(36% 45% at 15% 10%, rgba(245,197,66,.12), transparent 70%); filter:blur(8px); }
+    .wrap { max-width:860px; margin:0 auto; padding:40px 20px; position:relative; z-index:2; }
+    .hero { text-align:center; padding:60px 20px; border-bottom:1px solid var(--line); margin-bottom:40px; }
+    .hero h1 { font-family:"Clash Display",sans-serif; font-size:clamp(36px,6vw,56px); margin:0 0 12px; background:linear-gradient(135deg, var(--gold), #fff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .hero p { color:var(--muted); font-size:18px; margin:0; }
+    .hero .meta { margin-top:20px; font-size:14px; color:var(--muted); }
+    h2 { font-family:"Clash Display",sans-serif; font-size:28px; margin:48px 0 16px; color:var(--gold); border-left:4px solid var(--gold); padding-left:16px; }
+    h3 { font-size:20px; margin:28px 0 12px; color:var(--txt); }
+    p { margin:12px 0; color:var(--txt); }
+    .muted { color:var(--muted); }
+    .card { border:1px solid var(--line); border-radius:12px; padding:20px; margin:20px 0; background:rgba(21,33,56,.5); }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media(max-width:600px){ .grid-2{grid-template-columns:1fr;} }
+    .kv { border:1px solid var(--line); border-radius:8px; padding:14px; background:rgba(0,0,0,.2); }
+    .kv b { display:block; color:var(--gold); font-size:14px; margin-bottom:4px; }
+    .kv span { font-size:16px; font-weight:600; }
+    table { width:100%; border-collapse:collapse; margin:16px 0; }
+    th, td { border:1px solid var(--line); padding:10px 14px; text-align:left; }
+    th { background:rgba(245,197,66,.1); color:var(--gold); }
+    tr:nth-child(even) { background:rgba(0,0,0,.15); }
+    ul { padding-left:24px; }
+    li { margin:8px 0; }
+    .highlight { background:rgba(245,197,66,.1); border-left:3px solid var(--gold); padding:12px 16px; margin:16px 0; border-radius:0 8px 8px 0; }
+    .toc { border:1px solid var(--line); border-radius:12px; padding:20px; margin-bottom:40px; background:rgba(21,33,56,.5); }
+    .toc h3 { margin-top:0; color:var(--gold); }
+    .toc ol { margin:0; padding-left:24px; }
+    .toc li { margin:6px 0; }
+    .toc a { color:var(--muted); text-decoration:none; }
+    .toc a:hover { color:var(--gold); }
+    .nav { text-align:center; margin-bottom:30px; }
+    .nav a { color:var(--muted); text-decoration:none; margin:0 12px; font-size:14px; }
+    .nav a:hover { color:var(--gold); }
+    .footer { text-align:center; margin-top:60px; padding-top:30px; border-top:1px solid var(--line); color:var(--muted); font-size:14px; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <img class="cover" src="./assets/openclaw-ai-logo.svg" alt="POWER cover" />
+  <div class="stars"></div>
+  <div class="nebula"></div>
+  <main class="wrap">
+    <div class="nav">
+      <a href="./index.html">首页</a>
+      <a href="./insurance.html">亏损险</a>
+      <a href="./whitepaper.html" style="color:var(--gold);">白皮书</a>
+      <a href="./developer.html">开发者控制台</a>
+    </div>
+    <section class="hero">
       <h1>POWER 白皮书</h1>
-      <span class="tag">Network: BNB Smart Chain</span>
-      <p>POWER 是面向 Web3 的 AI 机器人产品。OCL 是 POWER 生态中的通用代币，用于机器人工具访问、功能解锁、任务激励与生态协作。</p>
+      <p>马到成功·交易亏损险 — BSC 首个交易者亏损保险协议</p>
+      <div class="meta">
+        版本：v1.0 | 发布日期：2026年 | 网络：BNB Smart Chain
+      </div>
+    </section>
+    <div class="toc">
+      <h3>目录</h3>
+      <ol>
+        <li><a href="#bg">项目背景与痛点</a></li>
+        <li><a href="#vision">愿景与定位</a></li>
+        <li><a href="#mechanism">保险机制详解</a></li>
+        <li><a href="#tokenomics">代币经济学</a></li>
+        <li><a href="#pool">保险池资金管理</a></li>
+        <li><a href="#risk">风控与防撸羊毛</a></li>
+        <li><a href="#roadmap">路线图</a></li>
+        <li><a href="#risk-disclaimer">风险提示与免责声明</a></li>
+      </ol>
     </div>
-
-    <div class="card">
-      <h2>1. 项目定义</h2>
-      <p>POWER 不是单一代币项目，而是一个 AI 机器人系统。机器人负责数据处理、策略执行辅助、风险提醒与用户交互。OCL 是该系统内的价值媒介和使用凭证。</p>
+    <h2 id="bg">一、项目背景与痛点</h2>
+    <p>加密货币交易市场以高波动、高风险著称。据行业统计，超过 80% 的散户交易者在合约和现货交易中长期亏损。一次极端行情（如 2022 年 LUNA 崩盘、FTX 暴雷）就可能让交易者多年积累化为乌有。</p>
+    <p>传统金融市场有完善的保险体系（存款保险、证券投资者保护基金等），但加密货币领域几乎是一片空白：</p>
+    <ul>
+      <li><b>交易所暴雷无赔付</b>：FTX、Celsius 等中心化平台暴雷后，用户资产血本无归</li>
+      <li><b>智能合约风险无兜底</b>：DeFi 协议被黑、rug pull 频发，用户维权无门</li>
+      <li><b>交易亏损无人管</b>：正常交易中的亏损完全由个人承担，缺乏风险对冲工具</li>
+    </ul>
+    <div class="highlight">
+      POWER（马到成功）应运而生，旨在成为 BSC 生态首个面向普通交易者的「交易亏损保险」协议，让每一位交易者都能享有链上透明、公平可及的风险保障。
     </div>
-
-    <div class="card">
-      <h2>2. OCL 的作用</h2>
-      <ul>
-        <li>机器人服务支付：用于调用高级 AI 功能与自动化模块。</li>
-        <li>生态激励：用于任务奖励、社区活动和贡献激励。</li>
-        <li>权限分层：用于解锁不同等级的机器人能力。</li>
-        <li>合作结算：用于生态伙伴在系统内的服务结算。</li>
-      </ul>
+    <h2 id="vision">二、愿景与定位</h2>
+    <h3>2.1 愿景</h3>
+    <p>让加密交易不再是「裸奔」，让每一位交易者都有兜底的勇气。我们相信，一个健康的加密生态不应该只有投机和赌博，更应该有风险管理和安全保障。</p>
+    <h3>2.2 定位</h3>
+    <p>POWER 不是又一个 meme 币，也不是纯投机工具。它是一个<strong>实用型保险代币</strong>：</p>
+    <div class="grid-2">
+      <div class="kv"><b>持币即投保</b><span>持有 POWER 自动获得保险资格，无需额外缴费</span></div>
+      <div class="kv"><b>链上透明</b><span>保险池余额、赔付记录全部上链，公开可查</span></div>
+      <div class="kv"><b>真实赔付</b><span>审核通过后 BNB 直接到账，不是积分不是代币</span></div>
+      <div class="kv"><b>社区共治</b><span>保险参数由社区投票决定，逐步去中心化</span></div>
     </div>
-
-    <div class="card">
-      <h2>3. 发行参数</h2>
-      <ul>
-        <li>代币名称：POWER</li>
-        <li>代币符号：马到成功</li>
-        <li>标准：BEP-20</li>
-        <li>总量：1,000,000,000 OCL</li>
-        <li>精度：18</li>
-        <li>链上合约：以官网实时展示地址为准</li>
-      </ul>
+    <h2 id="mechanism">三、保险机制详解</h2>
+    <h3>3.1 投保条件</h3>
+    <table>
+      <tr><th>参数</th><th>默认值</th><th>说明</th></tr>
+      <tr><td>最低持仓</td><td>10,000 POWER</td><td>持仓达到此数量即可投保</td></tr>
+      <tr><td>等待期</td><td>7 天</td><td>投保后需等待 7 天保单才生效，防止逆向选择</td></tr>
+      <tr><td>持仓维持</td><td>持续 ≥ 10,000</td><td>保单生效后需维持最低持仓，否则保单暂停</td></tr>
+    </table>
+    <h3>3.2 赔付规则</h3>
+    <table>
+      <tr><th>参数</th><th>默认值</th><th>说明</th></tr>
+      <tr><td>免赔额</td><td>亏损 ≥ 20%</td><td>单笔交易亏损超过本金 20% 才进入赔付范围</td></tr>
+      <tr><td>赔付比例</td><td>亏损额的 30%</td><td>例如亏损 1 BNB，赔付 0.3 BNB</td></tr>
+      <tr><td>单次上限</td><td>0.5 BNB</td><td>单笔赔付最高 0.5 BNB</td></tr>
+      <tr><td>赔付冷却</td><td>30 天/次</td><td>同一地址 30 天内只能申请一次赔付</td></tr>
+      <tr><td>保障范围</td><td>PancakeSwap 现货</td><td>仅保障指定 DEX 的链上交易</td></tr>
+    </table>
+    <h3>3.3 理赔流程</h3>
+    <ol>
+      <li><b>提交申请</b>：交易者在 dApp 输入亏损交易哈希和亏损金额</li>
+      <li><b>链上验证</b>：合约验证交易哈希未被重复使用、申请人保单有效</li>
+      <li><b>人工审核</b>：项目方审核交易真实性（v1.0 阶段，后续升级为链上自动验证）</li>
+      <li><b>发放赔付</b>：审核通过后，BNB 从保险池直接转入申请人钱包</li>
+    </ol>
+    <h3>3.4 赔付计算公式</h3>
+    <div class="highlight">
+      <p><strong>赔付额 = min(亏损额 × 30%, 单次上限 0.5 BNB, 保险池余额)</strong></p>
+      <p class="muted">当保险池余额不足时，赔付额按比例缩减，确保不会超付。</p>
     </div>
-
-    <div class="card">
-      <h2>4. 产品路径（POWER）</h2>
-      <ul>
-        <li>阶段 1：机器人基础能力与钱包交互（已上线）。</li>
-        <li>阶段 2：策略辅助、市场看板、批量操作工具。</li>
-        <li>阶段 3：生态接口开放与第三方插件接入。</li>
-        <li>阶段 4：治理与开发者生态扩展。</li>
-      </ul>
+    <h2 id="tokenomics">四、代币经济学</h2>
+    <h3>4.1 基本信息</h3>
+    <table>
+      <tr><th>项目</th><th>详情</th></tr>
+      <tr><td>代币名称</td><td>POWER</td></tr>
+      <tr><td>代币符号</td><td>马到成功</td></tr>
+      <tr><td>区块链</td><td>BNB Smart Chain (BEP-20)</td></tr>
+      <tr><td>总供应量</td><td>1,000,000,000 (10亿)</td></tr>
+      <tr><td>小数位</td><td>18</td></tr>
+      <tr><td>合约标准</td><td>ERC-20 / BEP-20</td></tr>
+    </table>
+    <h3>4.2 交易税机制</h3>
+    <p>POWER 采用买卖双税机制，税收收入是保险池的主要资金来源：</p>
+    <table>
+      <tr><th>交易类型</th><th>税率</th><th>资金分配</th></tr>
+      <tr><td>买入</td><td>默认 3%</td><td>70% 保险池 + 30% 国库</td></tr>
+      <tr><td>卖出</td><td>默认 5%</td><td>70% 保险池 + 30% 国库</td></tr>
+    </table>
+    <ul>
+      <li><b>保险池（70%）</b>：用于赔付交易者亏损，是保险协议的核心资金池</li>
+      <li><b>国库（30%）</b>：用于项目开发、市场营销、社区运营、流动性维护等</li>
+    </ul>
+    <h3>4.3 代币分配</h3>
+    <table>
+      <tr><th>用途</th><th>比例</th><th>说明</th></tr>
+      <tr><td>流动性池</td><td>40%</td><td>PancakeSwap 初始流动性，LP 锁定</td></tr>
+      <tr><td>社区空投</td><td>20%</td><td>早期社区成员、交易者空投</td></tr>
+      <tr><td>生态激励</td><td>15%</td><td>保险推广、合作伙伴激励</td></tr>
+      <tr><td>团队</td><td>10%</td><td>线性释放，12个月锁仓</td></tr>
+      <tr><td>储备金</td><td>10%</td><td>应急储备、未来发展</td></tr>
+      <tr><td>顾问</td><td>5%</td><td>顾问与早期支持者</td></tr>
+    </table>
+    <h2 id="pool">五、保险池资金管理</h2>
+    <h3>5.1 资金来源</h3>
+    <ol>
+      <li><b>交易税注入（主要）</b>：每笔买卖交易税的 70% 自动 swap 为 BNB 注入保险池</li>
+      <li><b>项目方充值</b>：项目方可从国库向保险池充值 BNB</li>
+      <li><b>社区捐赠</b>：任何人可向保险池捐赠 BNB</li>
+    </ol>
+    <h3>5.2 资金安全</h3>
+    <ul>
+      <li><b>专款专用</b>：保险池资金只能用于赔付，不能挪作他用</li>
+      <li><b>链上透明</b>：保险池余额实时可查，每笔赔付都有链上记录</li>
+      <li><b>超额保障</b>：赔付额不超过保险池余额，不会出现资不抵债</li>
+      <li><b>多签管理（规划中）</b>：v2.0 将引入多签管理，大额赔付需多签确认</li>
+    </ul>
+    <h3>5.3 池子健康度指标</h3>
+    <div class="grid-2">
+      <div class="kv"><b>池子余额</b><span>实时显示当前可赔付资金</span></div>
+      <div class="kv"><b>赔付率</b><span>累计赔付 / 累计收入，健康值应 &lt; 80%</span></div>
+      <div class="kv"><b>待审申请</b><span>当前待审核的赔付申请数量</span></div>
+      <div class="kv"><b>资金利用率</b><span>已赔付 / 池子峰值，反映资金使用效率</span></div>
     </div>
-
-    <div class="card">
-      <h2>5. 风险声明</h2>
-      <p>数字资产与链上交互存在高风险。POWER 提供的是工具与信息服务，不构成投资承诺或收益保证。用户应独立判断并自行承担风险。</p>
+    <h2 id="risk">六、风控与防撸羊毛</h2>
+    <p>保险协议最大的风险是「道德风险」和「逆向选择」。POWER 设计了多重风控机制：</p>
+    <h3>6.1 逆向选择防范</h3>
+    <ul>
+      <li><b>等待期</b>：投保后 7 天才能赔付，防止「先亏后买」</li>
+      <li><b>持仓要求</b>：必须持续持有最低数量代币，保单才有效</li>
+      <li><b>免赔额</b>：20% 免赔额过滤掉正常波动的小亏损</li>
+    </ul>
+    <h3>6.2 撸羊毛防范</h3>
+    <ul>
+      <li><b>交易哈希验证</b>：每笔赔付申请需提供唯一交易哈希，同一交易不能重复赔付</li>
+      <li><b>赔付冷却期</b>：30 天内只能赔付一次，防止频繁申请</li>
+      <li><b>单次上限</b>：0.5 BNB 上限控制单次赔付风险</li>
+      <li><b>人工审核</b>：v1.0 阶段所有申请需人工审核交易真实性</li>
+      <li><b>大额复核</b>：超过 0.1 BNB 的赔付需额外复核</li>
+    </ul>
+    <h3>6.3 智能合约安全</h3>
+    <ul>
+      <li>基于 OpenZeppelin 标准库开发，经过安全审计</li>
+      <li>重入保护：swap 操作有锁机制防止重入攻击</li>
+      <li>滑点保护：自动 swap 设置最低输出保护，防止 MEV 攻击</li>
+      <li>权限控制：所有管理函数仅限 Owner 调用，后续升级为多签/DAO</li>
+    </ul>
+    <h2 id="roadmap">七、路线图</h2>
+    <h3>Phase 1：基础上线（Q3 2026）</h3>
+    <ul>
+      <li>✅ 智能合约开发与部署（BSC 主网）</li>
+      <li>✅ 保险产品页 dApp 上线</li>
+      <li>✅ 投保与赔付申请功能</li>
+      <li>⬜ PancakeSwap 流动性添加与 LP 锁定</li>
+      <li>⬜ BscScan 合约验证</li>
+      <li>⬜ 社区启动与首批用户投保</li>
+    </ul>
+    <h3>Phase 2：生态扩展（Q4 2026）</h3>
+    <ul>
+      <li>链上自动赔付验证（替代人工审核）</li>
+      <li>支持更多 DEX（Biswap、MDEX 等）</li>
+      <li>支持合约交易亏损保险</li>
+      <li>多签钱包管理保险池</li>
+      <li>移动端 dApp 优化</li>
+      <li>合作伙伴集成（钱包、行情平台）</li>
+    </ul>
+    <h3>Phase 3：去中心化治理（Q1 2027）</h3>
+    <ul>
+      <li>DAO 治理上线，持币者投票决定保险参数</li>
+      <li>再保险机制（与其他保险协议合作）</li>
+      <li>跨链扩展（以太坊、Polygon、Arbitrum 等）</li>
+      <li>保险 NFT 化（保单可转让、可交易）</li>
+      <li>去中心化赔付仲裁机制</li>
+    </ul>
+    <h3>Phase 4：生态成熟（Q2 2027+）</h3>
+    <ul>
+      <li>成为 BSC 生态最大的交易保险协议</li>
+      <li>推出保险指数衍生品</li>
+      <li>机构级保险产品</li>
+      <li>跨链保险聚合器</li>
+    </ul>
+    <h2 id="risk-disclaimer">八、风险提示与免责声明</h2>
+    <div class="highlight">
+      <p><strong>重要提示：</strong>购买和持有 POWER 代币及使用本保险协议存在风险。在参与之前，请充分了解以下风险：</p>
     </div>
-
-    <div class="card">
-      <h2>6. 官方入口</h2>
-      <ul>
-        <li>官网：<a href="./index.html">POWER dApp</a></li>
-        <li>主网入口：<a href="./index.html?net=mainnet">POWER Mainnet</a></li>
-        <li>GitHub：<a href="https://github.com/yuanlongdong/OPENCLAW" target="_blank" rel="noopener noreferrer">OPENCLAW repository</a></li>
-      </ul>
+    <ol>
+      <li><b>智能合约风险</b>：尽管经过审计，智能合约仍可能存在未知漏洞或被攻击的风险</li>
+      <li><b>保险池风险</b>：赔付能力取决于保险池余额，极端情况下可能出现赔付不足或延迟</li>
+      <li><b>代币价格波动</b>：POWER 代币价格可能剧烈波动，投保门槛以代币数量计算</li>
+      <li><b>监管风险</b>：加密货币和 DeFi 协议面临不确定的监管环境</li>
+      <li><b>中心化风险</b>：v1.0 阶段赔付需人工审核，存在中心化操作风险</li>
+      <li><b>项目风险</b>：项目可能因技术、市场、团队等原因失败或停止运营</li>
+    </ol>
+    <p class="muted">本白皮书不构成任何投资建议。加密货币交易具有高风险性，可能导致全部本金损失。请根据自身风险承受能力谨慎决策。本协议不保证一定能获得赔付，赔付需符合保险条款并通过审核。</p>
+    <div class="footer">
+      <p>POWER（马到成功）· 交易亏损险 | BSC 首个交易者保险协议</p>
+      <p>本白皮书内容可能随项目发展更新，请以最新版本为准</p>
     </div>
-  </div>
+  </main>
 </body>
 </html>
