@@ -11,6 +11,7 @@ interface IUniswapV2Factory {
 interface IUniswapV2Router02 {
     function factory() external pure returns (address);
     function WETH() external pure returns (address);
+    function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
     function swapExactTokensForETHSupportingFeeOnTransferTokens(
         uint256 amountIn,
         uint256 amountOutMin,
@@ -22,9 +23,11 @@ interface IUniswapV2Router02 {
 
 contract OPENCLAW is ERC20, Ownable {
     uint256 public constant MAX_TAX_BPS = 1000; // 10%
+    uint256 public constant MAX_SWAP_SLIPPAGE_BPS = 2000; // 20% max slippage tolerance
     uint256 public buyTaxBps;
     uint256 public sellTaxBps;
     uint256 public swapTokensAtAmount;
+    uint256 public swapSlippageToleranceBps; // e.g. 1000 = accept min 90% of expected output (10% slippage)
 
     address public treasury;
     IUniswapV2Router02 public immutable router;
@@ -40,6 +43,8 @@ contract OPENCLAW is ERC20, Ownable {
     event ExcludedFromFee(address indexed account, bool isExcluded);
     event AMMPairUpdated(address indexed pair, bool isAMM);
     event SwapAndSendToTreasury(uint256 tokenAmount, uint256 bnbAmount);
+    event SwapSlippageUpdated(uint256 newSlippageBps);
+    event StuckBNBWithdrawn(uint256 amount);
 
     modifier lockSwap() {
         inSwap = true;
@@ -62,6 +67,7 @@ contract OPENCLAW is ERC20, Ownable {
         treasury = treasuryAddress;
         buyTaxBps = initialBuyTaxBps;
         sellTaxBps = initialSellTaxBps;
+        swapSlippageToleranceBps = 1000; // default: accept min 90% of expected (10% slippage tolerance)
 
         address createdPair = IUniswapV2Factory(router.factory()).createPair(address(this), router.WETH());
         pair = createdPair;
@@ -108,6 +114,20 @@ contract OPENCLAW is ERC20, Ownable {
         swapTokensAtAmount = amount;
     }
 
+    function setSwapSlippageTolerance(uint256 newSlippageBps) external onlyOwner {
+        require(newSlippageBps <= MAX_SWAP_SLIPPAGE_BPS, 'slippage too high');
+        require(newSlippageBps > 0, 'slippage=0');
+        swapSlippageToleranceBps = newSlippageBps;
+        emit SwapSlippageUpdated(newSlippageBps);
+    }
+
+    function withdrawStuckBNB() external onlyOwner {
+        uint256 balance = address(this).balance;
+        require(balance > 0, 'no BNB to withdraw');
+        payable(treasury).transfer(balance);
+        emit StuckBNBWithdrawn(balance);
+    }
+
     function _update(address from, address to, uint256 amount) internal override {
         if (amount == 0) {
             super._update(from, to, 0);
@@ -144,6 +164,20 @@ contract OPENCLAW is ERC20, Ownable {
         super._update(from, to, amount);
     }
 
+    function _getMinOutput(uint256 tokenAmount) private view returns (uint256) {
+        address[] memory path = new address[](2);
+        path[0] = address(this);
+        path[1] = router.WETH();
+        try router.getAmountsOut(tokenAmount, path) returns (uint[] memory amounts) {
+            // accept min (10000 - slippageTolerance) / 10000 of expected output
+            // e.g. tolerance=1000 -> accept min 90%
+            return (amounts[1] * (10_000 - swapSlippageToleranceBps)) / 10_000;
+        } catch {
+            // if price feed fails, fall back to 0 (old behavior) to avoid blocking swaps
+            return 0;
+        }
+    }
+
     function _swapAndSendToTreasury(uint256 tokenAmount) private lockSwap {
         if (tokenAmount == 0 || treasury == address(0)) return;
 
@@ -153,9 +187,10 @@ contract OPENCLAW is ERC20, Ownable {
 
         _approve(address(this), address(router), tokenAmount);
         uint256 bnbBefore = address(this).balance;
+        uint256 amountOutMin = _getMinOutput(tokenAmount);
         router.swapExactTokensForETHSupportingFeeOnTransferTokens(
             tokenAmount,
-            0,
+            amountOutMin,
             path,
             address(this),
             block.timestamp
