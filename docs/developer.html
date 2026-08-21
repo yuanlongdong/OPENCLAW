@@ -72,6 +72,71 @@
     </section>
 
     <section class="card">
+      <h2>合约参数</h2>
+      <div class="row">
+        <button id="refreshContractParams" class="secondary">刷新合约参数</button>
+      </div>
+      <div class="grid-2">
+        <div class="kv"><b>买入税</b><span id="paramBuyTax">-</span></div>
+        <div class="kv"><b>卖出税</b><span id="paramSellTax">-</span></div>
+        <div class="kv"><b>国库地址</b><span id="paramTreasury" class="mono">-</span></div>
+        <div class="kv"><b>Swap滑点容忍</b><span id="paramSlippage">-</span></div>
+        <div class="kv"><b>Swap触发阈值</b><span id="paramSwapThreshold">-</span></div>
+        <div class="kv"><b>合约BNB余额</b><span id="paramContractBNB">-</span></div>
+      </div>
+      <p id="paramsStatus" class="muted status"></p>
+    </section>
+
+    <section class="card">
+      <h2>合约管理（仅Owner）</h2>
+      <p class="muted">以下操作需要连接的钱包为合约 Owner 地址。</p>
+
+      <div class="col">
+        <h3>调整税率</h3>
+        <div class="row">
+          <input id="newBuyTax" placeholder="买入税 (bps, 如 300=3%)" type="number" min="0" max="1000" />
+          <input id="newSellTax" placeholder="卖出税 (bps, 如 500=5%)" type="number" min="0" max="1000" />
+          <button id="setTaxes" class="warn">设置税率</button>
+        </div>
+      </div>
+
+      <div class="col">
+        <h3>更换国库地址</h3>
+        <div class="row">
+          <input id="newTreasury" placeholder="新国库地址 0x..." />
+          <button id="setTreasury" class="warn">设置国库</button>
+        </div>
+      </div>
+
+      <div class="col">
+        <h3>免税白名单</h3>
+        <div class="row">
+          <input id="exemptAddress" placeholder="地址 0x..." />
+          <button id="addExempt" class="secondary">加入免税</button>
+          <button id="removeExempt" class="secondary">移出免税</button>
+          <button id="checkExempt" class="secondary">查询状态</button>
+        </div>
+        <p id="exemptStatus" class="muted status"></p>
+      </div>
+
+      <div class="col">
+        <h3>Swap滑点设置</h3>
+        <div class="row">
+          <input id="newSlippage" placeholder="滑点容忍 (bps, 如 1000=10%)" type="number" min="1" max="2000" />
+          <button id="setSlippage" class="warn">设置滑点</button>
+        </div>
+      </div>
+
+      <div class="col">
+        <h3>提取卡住的BNB</h3>
+        <p class="muted">将误转入合约的 BNB 提取到国库地址。</p>
+        <div class="row">
+          <button id="withdrawBNB" class="warn">提取合约BNB到国库</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
       <h2>最近转账历史</h2>
       <p class="muted">已分配总额: <span id="historyTotal" class="mono">0 OCL</span></p>
       <div class="row">

@@ -1,8 +1,26 @@
 const abi = [
+  // ERC20 basic
   'function balanceOf(address) view returns (uint256)',
   'function totalSupply() view returns (uint256)',
-  'function transfer(address,uint256) returns (bool)'
+  'function transfer(address,uint256) returns (bool)',
+  // Tax & treasury
+  'function buyTaxBps() view returns (uint256)',
+  'function sellTaxBps() view returns (uint256)',
+  'function treasury() view returns (address)',
+  'function swapTokensAtAmount() view returns (uint256)',
+  'function swapSlippageToleranceBps() view returns (uint256)',
+  // Fee exemption
+  'function isExcludedFromFee(address) view returns (bool)',
+  'function setExcludedFromFee(address,bool)',
+  // Admin setters
+  'function setTaxes(uint256,uint256)',
+  'function setTreasury(address)',
+  'function setSwapSlippageTolerance(uint256)',
+  'function setSwapTokensAtAmount(uint256)',
+  // Rescue
+  'function withdrawStuckBNB()',
 ];
+
 const TOKEN_DECIMALS = 18;
 const REQUIRED_CHAIN_ID = BigInt(window.OPENCLAW_CHAIN_ID || 97);
 const REQUIRED_CHAIN_HEX = `0x${REQUIRED_CHAIN_ID.toString(16)}`;
@@ -27,6 +45,7 @@ let transferHistory = [];
 
 function setText(id, val, cls = 'muted') {
   const el = document.getElementById(id);
+  if (!el) return;
   el.textContent = val;
   el.className = cls;
 }
@@ -101,6 +120,34 @@ async function refreshIssuerStats() {
     setText('statsStatus', '发行看板已刷新', 'ok');
   } catch (e) {
     setText('statsStatus', e.message || '发行看板刷新失败', 'bad');
+  }
+}
+
+async function refreshContractParams() {
+  try {
+    const p = getStaticProvider();
+    const c = new ethers.Contract(window.OPENCLAW_ADDRESS, abi, p);
+    const [buyTax, sellTax, treasuryAddr, swapThreshold, slippage] = await Promise.all([
+      c.buyTaxBps(),
+      c.sellTaxBps(),
+      c.treasury(),
+      c.swapTokensAtAmount(),
+      c.swapSlippageToleranceBps().catch(() => 0n),
+    ]);
+    setText('paramBuyTax', `${Number(buyTax) / 100}% (${Number(buyTax)} bps)`, 'mono');
+    setText('paramSellTax', `${Number(sellTax) / 100}% (${Number(sellTax)} bps)`, 'mono');
+    setText('paramTreasury', treasuryAddr, 'mono');
+    setText('paramSwapThreshold', `${ethers.formatUnits(swapThreshold, TOKEN_DECIMALS)} ${TOKEN_SYMBOL}`, 'mono');
+    if (slippage > 0n) {
+      setText('paramSlippage', `容忍最低 ${100 - Number(slippage) / 100}% 预期 (${Number(slippage)} bps)`, 'mono');
+    } else {
+      setText('paramSlippage', '未设置 (旧版合约)', 'muted');
+    }
+    const bnbBal = await p.getBalance(window.OPENCLAW_ADDRESS);
+    setText('paramContractBNB', `${ethers.formatUnits(bnbBal, 18)} ${NATIVE_SYMBOL}`, 'mono');
+    setText('paramsStatus', '合约参数已刷新', 'ok');
+  } catch (e) {
+    setText('paramsStatus', e.message || '合约参数刷新失败', 'bad');
   }
 }
 
@@ -231,12 +278,24 @@ async function ensureTokenContractReady() {
   if (!code || code === '0x') throw new Error(`该网络上未找到 ${TOKEN_SYMBOL} 合约，请确认钱包网络为 ${NETWORK_NAME}`);
 }
 
+async function waitForTx(tx, statusId) {
+  setText(statusId, `交易已提交: ${tx.hash}`, 'muted');
+  const receipt = await tx.wait();
+  if (receipt.status === 1) {
+    setText(statusId, `操作成功: ${tx.hash}`, 'ok');
+  } else {
+    setText(statusId, `操作失败 (reverted): ${tx.hash}`, 'bad');
+  }
+  return receipt;
+}
 
+// === Wallet & basic actions ===
 document.getElementById('connect').onclick = async () => {
   try {
     await connect();
     await refreshNativeBalance();
     await refreshIssuerStats();
+    await refreshContractParams();
     setText('status', '钱包已连接', 'ok');
   } catch (e) {
     setText('status', e.message || '连接失败', 'bad');
@@ -281,9 +340,7 @@ document.getElementById('send').onclick = async () => {
     if (!(Number(amount) > 0)) throw new Error('数量必须 > 0');
     const c = getContract(false);
     const tx = await c.transfer(to, ethers.parseUnits(amount, TOKEN_DECIMALS));
-    setText('status', `交易已提交: ${tx.hash}`, 'muted');
-    await tx.wait();
-    setText('status', `转账成功: ${tx.hash}`, 'ok');
+    await waitForTx(tx, 'status');
     addHistoryItem({ from: account, to, amount, hash: tx.hash, time: Date.now() });
     await refreshIssuerStats();
   } catch (e) {
@@ -327,6 +384,10 @@ document.getElementById('refreshStats').onclick = async () => {
   await refreshIssuerStats();
 };
 
+document.getElementById('refreshContractParams').onclick = async () => {
+  await refreshContractParams();
+};
+
 document.getElementById('refreshHistory').onclick = () => {
   loadHistory();
   renderHistory();
@@ -340,9 +401,125 @@ document.getElementById('clearHistory').onclick = () => {
   setText('status', '已清空本地历史', 'ok');
 };
 
+// === Admin: Taxes ===
+document.getElementById('setTaxes').onclick = async () => {
+  try {
+    if (!account) await connect();
+    ensureOwner();
+    await ensureTokenContractReady();
+    const buyTax = Number(document.getElementById('newBuyTax').value);
+    const sellTax = Number(document.getElementById('newSellTax').value);
+    if (!Number.isFinite(buyTax) || buyTax < 0 || buyTax > 1000) throw new Error('买入税必须在 0-1000 bps 之间');
+    if (!Number.isFinite(sellTax) || sellTax < 0 || sellTax > 1000) throw new Error('卖出税必须在 0-1000 bps 之间');
+    const c = getContract(false);
+    const tx = await c.setTaxes(buyTax, sellTax);
+    await waitForTx(tx, 'paramsStatus');
+    await refreshContractParams();
+  } catch (e) {
+    setText('paramsStatus', e.message || '设置税率失败', 'bad');
+  }
+};
+
+// === Admin: Treasury ===
+document.getElementById('setTreasury').onclick = async () => {
+  try {
+    if (!account) await connect();
+    ensureOwner();
+    await ensureTokenContractReady();
+    const newTreasury = document.getElementById('newTreasury').value.trim();
+    if (!ethers.isAddress(newTreasury)) throw new Error('国库地址无效');
+    const c = getContract(false);
+    const tx = await c.setTreasury(newTreasury);
+    await waitForTx(tx, 'paramsStatus');
+    await refreshContractParams();
+  } catch (e) {
+    setText('paramsStatus', e.message || '设置国库失败', 'bad');
+  }
+};
+
+// === Admin: Fee exemption ===
+document.getElementById('addExempt').onclick = async () => {
+  try {
+    if (!account) await connect();
+    ensureOwner();
+    await ensureTokenContractReady();
+    const addr = document.getElementById('exemptAddress').value.trim();
+    if (!ethers.isAddress(addr)) throw new Error('地址无效');
+    const c = getContract(false);
+    const tx = await c.setExcludedFromFee(addr, true);
+    await waitForTx(tx, 'exemptStatus');
+    setText('exemptStatus', `已加入免税白名单: ${shortAddr(addr)}`, 'ok');
+  } catch (e) {
+    setText('exemptStatus', e.message || '操作失败', 'bad');
+  }
+};
+
+document.getElementById('removeExempt').onclick = async () => {
+  try {
+    if (!account) await connect();
+    ensureOwner();
+    await ensureTokenContractReady();
+    const addr = document.getElementById('exemptAddress').value.trim();
+    if (!ethers.isAddress(addr)) throw new Error('地址无效');
+    const c = getContract(false);
+    const tx = await c.setExcludedFromFee(addr, false);
+    await waitForTx(tx, 'exemptStatus');
+    setText('exemptStatus', `已移出免税白名单: ${shortAddr(addr)}`, 'ok');
+  } catch (e) {
+    setText('exemptStatus', e.message || '操作失败', 'bad');
+  }
+};
+
+document.getElementById('checkExempt').onclick = async () => {
+  try {
+    const addr = document.getElementById('exemptAddress').value.trim();
+    if (!ethers.isAddress(addr)) throw new Error('地址无效');
+    const p = getStaticProvider();
+    const c = new ethers.Contract(window.OPENCLAW_ADDRESS, abi, p);
+    const exempt = await c.isExcludedFromFee(addr);
+    setText('exemptStatus', exempt ? `${shortAddr(addr)} 已免税` : `${shortAddr(addr)} 未免税`, exempt ? 'ok' : 'muted');
+  } catch (e) {
+    setText('exemptStatus', e.message || '查询失败', 'bad');
+  }
+};
+
+// === Admin: Slippage ===
+document.getElementById('setSlippage').onclick = async () => {
+  try {
+    if (!account) await connect();
+    ensureOwner();
+    await ensureTokenContractReady();
+    const slippage = Number(document.getElementById('newSlippage').value);
+    if (!Number.isFinite(slippage) || slippage < 1 || slippage > 2000) throw new Error('滑点必须在 1-2000 bps 之间');
+    const c = getContract(false);
+    const tx = await c.setSwapSlippageTolerance(slippage);
+    await waitForTx(tx, 'paramsStatus');
+    await refreshContractParams();
+  } catch (e) {
+    setText('paramsStatus', e.message || '设置滑点失败（旧版合约可能不支持此函数）', 'bad');
+  }
+};
+
+// === Admin: Withdraw stuck BNB ===
+document.getElementById('withdrawBNB').onclick = async () => {
+  try {
+    if (!account) await connect();
+    ensureOwner();
+    await ensureTokenContractReady();
+    const c = getContract(false);
+    const tx = await c.withdrawStuckBNB();
+    await waitForTx(tx, 'paramsStatus');
+    await refreshContractParams();
+  } catch (e) {
+    setText('paramsStatus', e.message || '提取失败（旧版合约可能不支持此函数）', 'bad');
+  }
+};
+
+// === Init ===
 (async () => {
   loadHistory();
   renderHistory();
   updateOwnerHint();
   await refreshIssuerStats();
+  await refreshContractParams();
 })();
